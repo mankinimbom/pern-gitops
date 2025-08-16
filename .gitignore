@@ -1,0 +1,97 @@
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Logs
+logs/
+*.log
+
+# Cache files
+.cache/
+
+# MacOS
+.AppleDouble
+.LSOverride
+Icon
+
+# Windows
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Kubernetes secrets (CRITICAL - DO NOT COMMIT SECRETS)
+*-secret.yaml
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+kubeconfig
+*.kubeconfig
+
+# Sensitive configuration files
+config.json
+config.yaml
+*.env
+.env*
+
+# Helm charts dependencies
+charts/*/charts/
+charts/*/requirements.lock
+
+# Kustomize builds (if any)
+kustomization-build/
+
+# ArgoCD local files
+.argocd/
+
+# Terraform state (if used for infrastructure)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# IDE files
+*.sublime-project
+*.sublime-workspace
+
+# Development tools
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# Local development overrides
+local/
+dev-overrides/
