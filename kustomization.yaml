@@ -3,5 +3,6 @@ kind: Kustomization
 
 resources:
   - projects/appproject.yaml
-  - projects/applicationset.yaml
   - projects/analysis-template.yaml
+  - apps/pern-app-production.yaml
+  - apps/pern-app-staging.yaml

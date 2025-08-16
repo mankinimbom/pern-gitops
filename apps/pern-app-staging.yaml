@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pern-app-staging
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: pern-app
+  source:
+    repoURL: https://github.com/mankinimbom/pern-gitops
+    targetRevision: HEAD
+    path: apps/pern-app/overlays/staging
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pern-app-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true

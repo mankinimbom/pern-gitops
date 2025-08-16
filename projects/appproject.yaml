@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: pern-app
+  namespace: argocd
+spec:
+  description: PERN Stack Application Project
+  
+  sourceRepos:
+  - 'https://github.com/mankinimbom/pern-gitops'
+  
+  destinations:
+  - namespace: 'pern-app'
+    server: 'https://kubernetes.default.svc'
+  - namespace: 'argocd'
+    server: 'https://kubernetes.default.svc'
+  
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  - group: networking.k8s.io
+    kind: Ingress
+  - group: cert-manager.io
+    kind: ClusterIssuer
+  
+  namespaceResourceWhitelist:
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: Secret
+  - group: ''
+    kind: ConfigMap
+  - group: ''
+    kind: PersistentVolumeClaim
+  - group: apps
+    kind: Deployment
+  - group: argoproj.io
+    kind: Rollout
+  - group: networking.k8s.io
+    kind: Ingress
+  - group: autoscaling
+    kind: HorizontalPodAutoscaler
+  
+  roles:
+  - name: admin
+    description: Admin access to PERN app
+    policies:
+    - p, proj:pern-app:admin, applications, *, pern-app/*, allow
+    - p, proj:pern-app:admin, repositories, *, *, allow
+    groups:
+    - argocd-admins
+  
+  - name: developer
+    description: Developer access to PERN app
+    policies:
+    - p, proj:pern-app:developer, applications, get, pern-app/*, allow
+    - p, proj:pern-app:developer, applications, sync, pern-app/*, allow
+    groups:
+    - argocd-developers

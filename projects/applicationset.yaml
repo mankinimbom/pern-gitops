@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pern-app-set
+  namespace: argocd
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/mankinimbom/pern-gitops
+      revision: HEAD
+      directories:
+      - path: apps/pern-app/overlays/*
+      - path: apps/pern-app/overlays/staging
+      - path: apps/pern-app/overlays/production
+  
+  template:
+    metadata:
+      name: 'pern-app-{{path.basename}}'
+      finalizers:
+      - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: pern-app
+      source:
+        repoURL: https://github.com/mankinimbom/pern-gitops
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: pern-app
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+        - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
