@@ -4,10 +4,10 @@ metadata:
   name: postgresql-secret
   namespace: pern-app
 type: Opaque
-data:
-  username: cG9zdGdyZXM=  # postgres
-  password: cGFzc3dvcmQ=  # password
-  database: cGVybl9kYg==  # pern_db
+stringData:
+  username: postgres
+  password: "${POSTGRES_PASSWORD}"
+  database: pern_db
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

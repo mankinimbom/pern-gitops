@@ -4,8 +4,10 @@ metadata:
   name: backend-secret
   namespace: pern-app
 type: Opaque
-data:
-  database-url: cG9zdGdyZXNxbDovL3Bvc3RncmVzOnBhc3N3b3JkQHBvc3RncmVzcWwtc2VydmljZTo1NDMyL3Blcm5fZGI=
+stringData:
+  database-url: "${DATABASE_URL}"
+  jwt-secret: "${JWT_SECRET}"
+  redis-url: "${REDIS_URL}"
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -62,6 +64,24 @@ spec:
             secretKeyRef:
               name: backend-secret
               key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: jwt-secret
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: redis-url
+        - name: CORS_ORIGIN
+          value: "https://pern-app.ankinimbom.com"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: RATE_LIMIT_WINDOW_MS
+          value: "900000"
+        - name: RATE_LIMIT_MAX_REQUESTS
+          value: "1000"
         livenessProbe:
           httpGet:
             path: /health

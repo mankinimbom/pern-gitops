@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - redis.yaml
   - postgresql.yaml
   - backend.yaml
   - frontend.yaml
