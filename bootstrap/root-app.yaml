@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: pern-app
   source:
     repoURL: https://github.com/mankinimbom/pern-gitops
     targetRevision: HEAD

@@ -47,9 +47,12 @@ spec:
   - group: admissionregistration.k8s.io
     kind: ValidatingWebhookConfiguration
   - group: monitoring.coreos.com
-    kind: '*'
-  - group: '*'
-    kind: '*'
+    kind: ServiceMonitor
+  - group: monitoring.coreos.com
+    kind: PodMonitor
+  - group: monitoring.coreos.com
+    kind: PrometheusRule
+  # Removed overpermissive wildcard permissions for security
 
   # Orphaned resource monitoring
   orphanedResources:

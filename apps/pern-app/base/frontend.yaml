@@ -12,7 +12,7 @@ spec:
       stableService: frontend-service
       trafficRouting:
         nginx:
-          stableIngress: frontend-ingress
+          stableIngress: pern-app-ingress
       steps:
       - setWeight: 20
       - pause: {}
@@ -24,7 +24,7 @@ spec:
       - pause: {duration: 10}
       analysis:
         templates:
-        - templateName: backend-success-rate
+        - templateName: success-rate
         startingStep: 2
         args:
         - name: service-name
@@ -38,7 +38,6 @@ spec:
         app: frontend
         app.kubernetes.io/name: frontend
         app.kubernetes.io/part-of: pern-stack
-        environment: production
         managed-by: argocd
         version: v1
     spec:

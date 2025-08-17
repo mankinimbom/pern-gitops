@@ -6,6 +6,10 @@ namespace: pern-app-staging
 resources:
   - ../../base
 
+patchesStrategicMerge:
+  - replica-patch.yaml
+  - resource-patch.yaml
+
 images:
   - name: ghcr.io/mankinimbom/pern-backend
     newTag: main-a3e9cd3
