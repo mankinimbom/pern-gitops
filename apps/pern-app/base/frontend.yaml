@@ -24,7 +24,7 @@ spec:
       - pause: {duration: 10}
       analysis:
         templates:
-        - templateName: success-rate
+        - templateName: backend-success-rate
         startingStep: 2
         args:
         - name: service-name
@@ -36,6 +36,9 @@ spec:
     metadata:
       labels:
         app: frontend
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/part-of: pern-stack
+        version: v1
     spec:
       containers:
       - name: frontend
