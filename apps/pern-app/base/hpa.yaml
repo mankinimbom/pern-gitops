@@ -2,7 +2,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: backend-hpa
-  namespace: pern-app
 spec:
   scaleTargetRef:
     apiVersion: argoproj.io/v1alpha1
@@ -41,7 +40,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-hpa
-  namespace: pern-app
 spec:
   scaleTargetRef:
     apiVersion: argoproj.io/v1alpha1

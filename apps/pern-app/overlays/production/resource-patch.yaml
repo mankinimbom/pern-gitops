@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: backend
-  namespace: pern-app
+  namespace: pern-app-production
 spec:
   template:
     spec:
@@ -20,7 +20,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: frontend
-  namespace: pern-app
+  namespace: pern-app-production
 spec:
   template:
     spec:
@@ -38,7 +38,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgresql
-  namespace: pern-app
+  namespace: pern-app-production
 spec:
   template:
     spec:

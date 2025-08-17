@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - rbac.yaml
   - secrets.yaml
   - redis.yaml
   - postgresql.yaml
