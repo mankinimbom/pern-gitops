@@ -6,8 +6,8 @@ namespace: pern-app-staging
 resources:
   - ../../base
 
-patchesStrategicMerge:
-  - namespace-patch.yaml
+patches:
+  - path: namespace-patch.yaml
 
 # Environment-specific configurations
 namePrefix: staging-
