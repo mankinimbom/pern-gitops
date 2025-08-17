@@ -26,6 +26,6 @@ commonLabels:
 
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: ff6915512e68da5bf9165cda8adfb714d6a71b25
+    newTag: bd748c6ec45f8c15bc0c59f790b24c5385051111
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: ff6915512e68da5bf9165cda8adfb714d6a71b25
+    newTag: bd748c6ec45f8c15bc0c59f790b24c5385051111
