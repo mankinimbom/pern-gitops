@@ -2,7 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-success-rate
-  namespace: pern-app
   labels:
     app.kubernetes.io/component: analysis
     app.kubernetes.io/part-of: pern-stack
@@ -54,7 +53,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-response-time
-  namespace: pern-app
 spec:
   args:
   - name: service-name
@@ -98,7 +96,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-error-rate
-  namespace: pern-app
 spec:
   args:
   - name: service-name
@@ -153,7 +150,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-cpu-memory
-  namespace: pern-app
 spec:
   args:
   - name: service-name

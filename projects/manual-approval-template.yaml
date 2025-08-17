@@ -2,7 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: manual-approval-production
-  namespace: pern-app
   labels:
     app.kubernetes.io/component: approval-gate
     app.kubernetes.io/part-of: pern-stack
@@ -81,7 +80,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: smoke-tests-production
-  namespace: pern-app
 spec:
   args:
   - name: service-url
