@@ -8,7 +8,9 @@ metadata:
     app.kubernetes.io/part-of: pern-stack
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    deployment.kubernetes.io/revisioapiVersion: v1
+    deployment.kubernetes.io/revision: "1"
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: backend-stable-service
@@ -18,11 +20,13 @@ spec:
   ports:
     - port: 3001
       targetPort: 3001
-  replicas: 3
-  
-  # Advanced canary deployment strategy with metrics-driven promotion
-  strategy:
-    canary:
+---
+# Backend Rollout continues here
+apiVersion: argoproj.io/v1alpha1  
+kind: Rollout
+metadata:
+  name: backend-rollout
+spec:
       # Service routing configuration
       canaryService: backend-canary-service
       stableService: backend-service

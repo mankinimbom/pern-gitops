@@ -4,35 +4,34 @@ kind: Kustomization
 namespace: pern-app-production
 
 resources:
-  - ../../base
+- ../../base
 
-patchesStrategicMerge:
-  - replica-patch.yaml
-  - resource-patch.yaml
-  - rollout-backend-patch.yaml
-  - rollout-frontend-patch.yaml
 
 # Use immutable, SHA-based image tags for production
 images:
-  - name: ghcr.io/mankinimbom/pern-backend
-    newTag: main-a3e9cd3  # SHA-based immutable tag
-  - name: ghcr.io/mankinimbom/pern-frontend  
-    newTag: main-a3e9cd3  # SHA-based immutable tag
+- name: ghcr.io/mankinimbom/pern-backend
+  newTag: main-a3e9cd3
+- name: ghcr.io/mankinimbom/pern-frontend
+  newTag: main-a3e9cd3
 
 # Production-specific configurations
 replicas:
-  - name: backend
-    count: 5
-  - name: frontend
-    count: 3
+- count: 5
+  name: backend
+- count: 3
+  name: frontend
 
 # Common labels for all production resources
+
+# Annotations for production tracking
+commonAnnotations:
+  argocd.argoproj.io/tracking-id: pern-app-production
+  deployment.kubernetes.io/environment: production
 commonLabels:
   environment: production
   managed-by: argocd
   app.kubernetes.io/part-of: pern-stack
-
-# Annotations for production tracking
-commonAnnotations:
-  deployment.kubernetes.io/environment: production
-  argocd.argoproj.io/tracking-id: pern-app-production
+patchesStrategicMerge:
+- replica-patch.yaml
+- resource-patch.yaml
+- rollout-backend-patch.yaml
