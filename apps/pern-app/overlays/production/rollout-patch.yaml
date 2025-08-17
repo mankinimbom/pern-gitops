@@ -19,7 +19,7 @@ spec:
           - templateName: database-performance-analysis
           args:
           - name: service-name
-            value: production-backend-canary-service-prod
+            value: backend-canary-service
           - name: namespace
             value: pern-app-production
       - setWeight: 10
@@ -33,7 +33,7 @@ spec:
           - templateName: comprehensive-health-analysis
           args:
           - name: service-name
-            value: production-backend-canary-service-prod
+            value: backend-canary-service
           - name: namespace
             value: pern-app-production
       - setWeight: 50
@@ -47,7 +47,7 @@ spec:
           - templateName: comprehensive-health-analysis
           args:
           - name: service-name
-            value: production-backend-canary-service-prod
+            value: backend-canary-service
           - name: namespace
             value: pern-app-production
 
@@ -70,7 +70,7 @@ spec:
           - templateName: frontend-performance-analysis
           args:
           - name: service-name
-            value: production-frontend-canary-service-prod
+            value: frontend-canary-service
           - name: namespace
             value: pern-app-production
       - setWeight: 10
@@ -83,7 +83,7 @@ spec:
           - templateName: success-rate-analysis
           args:
           - name: service-name
-            value: production-frontend-canary-service-prod
+            value: frontend-canary-service
           - name: namespace
             value: pern-app-production
       - setWeight: 50
@@ -97,6 +97,6 @@ spec:
           - templateName: comprehensive-health-analysis
           args:
           - name: service-name
-            value: production-frontend-canary-service-prod
+            value: frontend-canary-service
           - name: namespace
             value: pern-app-production

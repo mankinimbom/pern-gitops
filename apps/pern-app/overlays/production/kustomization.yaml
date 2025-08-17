@@ -12,8 +12,6 @@ patches:
   - path: rollout-patch.yaml
 
 # Environment-specific configurations
-namePrefix: production-
-nameSuffix: -prod
 
 # Production environment labels
 commonLabels:
