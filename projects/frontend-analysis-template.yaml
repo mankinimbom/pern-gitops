@@ -15,12 +15,9 @@ metadata:
 spec:
   args:
   - name: service-name
-    description: "Name of the frontend service to analyze"
   - name: namespace
-    description: "Namespace where the frontend service is deployed"
     value: "pern-app-production"
   - name: ingress-class
-    description: "Ingress class for routing analysis"
     value: "nginx"
   metrics:
   # Frontend Response Time P95 Analysis

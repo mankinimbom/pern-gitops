@@ -14,18 +14,13 @@ metadata:
 spec:
   args:
   - name: service-name
-    description: "Name of the service to analyze"
   - name: namespace
-    description: "Namespace where the service is deployed"
     value: "pern-app-production"
   - name: success-rate-threshold
-    description: "Minimum success rate threshold"
     value: "99"
   - name: error-rate-threshold  
-    description: "Maximum error rate threshold"
     value: "1"
   - name: response-time-threshold
-    description: "Maximum response time in milliseconds"
     value: "500"
   
   metrics:
