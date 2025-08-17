@@ -98,8 +98,8 @@ spec:
       info:
       - name: Environment
         value: '{{.path.basename}}'
-      - name: 'Git Revision'
-        value: '{{.revision}}'
+      - name: 'Git Path'
+        value: '{{.path.path}}'
       - name: 'Repository'
         value: '{{.repoURL}}'
       
