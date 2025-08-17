@@ -11,11 +11,6 @@ spec:
     name: backend
   minReplicas: 3
   maxReplicas: 10
-  behavior:
-    scaleUp:
-      stabilizationWindowSeconds: 60
-    scaleDown:
-      stabilizationWindowSeconds: 300
   metrics:
   - type: Resource
     resource:
