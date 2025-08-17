@@ -3,6 +3,15 @@ kind: Application
 metadata:
   name: pern-app-staging
   namespace: argocd
+  annotations:
+    # GitHub Actions will update image tags directly in GitOps repository
+    # Immediate updates for staging environment
+    ci.github.com/update-method: "github-actions"
+    ci.github.com/repository: "mankinimbom/pern-app"
+    ci.github.com/auto-deploy: "true"
+    # Enable notifications
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: pern-deployments
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: pern-deployments
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -18,7 +27,21 @@ spec:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
     syncOptions:
     - CreateNamespace=true
     - PrunePropagationPolicy=foreground
     - PruneLast=true
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  # Refresh configuration for faster image detection
+  info:
+  - name: 'Image Update Strategy'
+    value: 'Automatic latest tag updates enabled for staging'
+  revisionHistoryLimit: 10
