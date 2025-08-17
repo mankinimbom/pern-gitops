@@ -9,30 +9,16 @@ stringData:
   password: "${POSTGRES_PASSWORD}"
   database: pern_db
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgresql-pvc
-  namespace: pern-app
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: longhorn
-  resources:
-    requests:
-      storage: 10Gi
----
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: postgresql
   namespace: pern-app
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
+  serviceName: postgresql-service
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: postgresql
@@ -76,7 +62,7 @@ spec:
             memory: "512Mi"
             cpu: "500m"
         volumeMounts:
-        - name: postgresql-storage
+        - name: postgresql-data
           mountPath: /var/lib/postgresql/data
         livenessProbe:
           exec:
@@ -108,10 +94,15 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 30
-      volumes:
-      - name: postgresql-storage
-        persistentVolumeClaim:
-          claimName: postgresql-pvc
+  volumeClaimTemplates:
+  - metadata:
+      name: postgresql-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: longhorn
+      resources:
+        requests:
+          storage: 10Gi
 ---
 apiVersion: v1
 kind: Service
@@ -124,3 +115,4 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
+  type: ClusterIP
