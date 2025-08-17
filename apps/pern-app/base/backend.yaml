@@ -156,7 +156,7 @@ spec:
       
       containers:
       - name: backend
-        image: ghcr.io/mankinimbom/pern-backend:v1.0.0
+        image: ghcr.io/mankinimbom/pern-backend:main-a3e9cd3
         imagePullPolicy: IfNotPresent
         
         ports:

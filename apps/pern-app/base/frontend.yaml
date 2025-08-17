@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/mankinimbom/pern-frontend:latest
+        image: ghcr.io/mankinimbom/pern-frontend:main-a3e9cd3
         ports:
         - containerPort: 80
         livenessProbe:
