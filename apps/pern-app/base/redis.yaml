@@ -17,15 +17,6 @@ data:
     rdbchecksum yes
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: redis-secret
-  namespace: pern-app
-type: Opaque
-stringData:
-  password: "your_redis_password"
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: redis-pvc
