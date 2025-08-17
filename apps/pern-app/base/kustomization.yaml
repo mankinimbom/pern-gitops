@@ -5,9 +5,8 @@ kind: Kustomization
 metadata:
   name: pern-app-base
 
-# Common labels applied to all resources
-labels:
-- pairs:
+# Common labels applied to all resources (use commonLabels for wide compatibility)
+commonLabels:
   app.kubernetes.io/name: pern-app
   app.kubernetes.io/version: "1.0.0"
   app.kubernetes.io/managed-by: kustomize
