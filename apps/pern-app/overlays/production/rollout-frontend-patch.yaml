@@ -1,0 +1,44 @@
+# Frontend Rollout Production Configuration
+- op: replace
+  path: /spec/replicas
+  value: 4
+- op: replace
+  path: /spec/strategy/canary/steps
+  value:
+  - setWeight: 5
+  - pause: {duration: 180s}
+  - analysis:
+      templates:
+      - templateName: frontend-performance-analysis
+      args:
+      - name: service-name
+        value: frontend-canary-service
+      - name: namespace
+        value: pern-app
+  - setWeight: 10
+  - pause: {duration: 300s}
+  - setWeight: 20
+  - pause: {duration: 600s}
+  - analysis:
+      templates:
+      - templateName: frontend-performance-analysis
+      - templateName: success-rate-analysis
+      args:
+      - name: service-name
+        value: frontend-canary-service
+      - name: namespace
+        value: pern-app
+  - setWeight: 50
+  - pause: {duration: 900s}
+  - setWeight: 75
+  - pause: {duration: 1200s}
+  - analysis:
+      templates:
+      - templateName: frontend-performance-analysis
+      - templateName: success-rate-analysis
+      - templateName: comprehensive-health-analysis
+      args:
+      - name: service-name
+        value: frontend-canary-service
+      - name: namespace
+        value: pern-app

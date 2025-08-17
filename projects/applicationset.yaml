@@ -46,8 +46,7 @@ spec:
         deployment.argocd.argoproj.io/rollout-enabled: 'true'
       finalizers:
       - resources-finalizer.argocd.argoproj.io
-
-  spec:
+    spec:
       project: pern-app
       source:
         repoURL: https://github.com/mankinimbom/pern-gitops
@@ -55,7 +54,7 @@ spec:
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: 'pern-app-{{path.basename}}'
+        namespace: 'pern-app'
       syncPolicy:
         automated:
           prune: true

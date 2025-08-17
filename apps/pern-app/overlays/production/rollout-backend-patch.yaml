@@ -1,0 +1,46 @@
+# Backend Rollout Production Configuration
+- op: replace
+  path: /spec/replicas
+  value: 5
+- op: replace
+  path: /spec/strategy/canary/steps
+  value:
+  - setWeight: 5
+  - pause: {duration: 300s}
+  - analysis:
+      templates:
+      - templateName: success-rate-analysis
+      - templateName: database-performance-analysis
+      args:
+      - name: service-name
+        value: backend-canary-service
+      - name: namespace
+        value: pern-app
+  - setWeight: 10
+  - pause: {duration: 600s}
+  - setWeight: 25
+  - pause: {duration: 900s}
+  - analysis:
+      templates:
+      - templateName: success-rate-analysis
+      - templateName: database-performance-analysis
+      - templateName: comprehensive-health-analysis
+      args:
+      - name: service-name
+        value: backend-canary-service
+      - name: namespace
+        value: pern-app
+  - setWeight: 50
+  - pause: {duration: 1200s}
+  - setWeight: 75
+  - pause: {duration: 1800s}
+  - analysis:
+      templates:
+      - templateName: success-rate-analysis
+      - templateName: database-performance-analysis
+      - templateName: comprehensive-health-analysis
+      args:
+      - name: service-name
+        value: backend-canary-service
+      - name: namespace
+        value: pern-app
