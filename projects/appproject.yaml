@@ -120,9 +120,5 @@ spec:
     - stakeholders
     - qa-team
   
-  # Signature verification for enhanced security
-  signatureKeys:
-  - keyID: mankinimbom-signing-key
-  
   # Git webhook restrictions
   permitOnlyProjectScopedClusters: false
