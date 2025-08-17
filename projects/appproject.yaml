@@ -23,7 +23,6 @@ spec:
   - namespace: 'argocd'
     server: 'https://kubernetes.default.svc'
   
-  # Cluster-level resources with minimal permissions
   clusterResourceWhitelist:
   - group: ''
     kind: Namespace

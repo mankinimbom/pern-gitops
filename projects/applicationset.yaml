@@ -16,16 +16,7 @@ spec:
       revision: HEAD
       directories:
       - path: apps/pern-app/overlays/*
-      template:
-        metadata: {}
-        spec:
-          source:
-            repoURL: https://github.com/mankinimbom/pern-gitops
-            targetRevision: HEAD
-          destination:
-            server: https://kubernetes.default.svc
-          project: pern-app
-
+  
   template:
     metadata:
       name: 'pern-app-{{.path.basename}}'
