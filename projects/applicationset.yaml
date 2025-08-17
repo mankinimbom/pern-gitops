@@ -47,7 +47,7 @@ spec:
       finalizers:
       - resources-finalizer.argocd.argoproj.io
 
-    spec:
+  spec:
       project: pern-app
       source:
         repoURL: https://github.com/mankinimbom/pern-gitops
@@ -69,17 +69,6 @@ spec:
         - RespectIgnoreDifferences=true
         - ApplyOutOfSyncOnly=true
         - Replace=false
-        managedNamespaceMetadata:
-          labels:
-            app.kubernetes.io/name: pern-app
-            app.kubernetes.io/instance: '{{path.basename}}'
-            environment: '{{path.basename}}'
-            managed-by: argocd
-            pod-security.kubernetes.io/enforce: restricted
-            pod-security.kubernetes.io/audit: restricted
-            pod-security.kubernetes.io/warn: restricted
-          annotations:
-            deployment.argocd.argoproj.io/environment: '{{path.basename}}'
         retry:
           limit: 10
           backoff:
@@ -139,75 +128,4 @@ spec:
         value: 'Horizontal Pod Autoscaler based on CPU/Memory'
       revisionHistoryLimit: 10
 
-  # ApplicationSet-level sync policy and strategy
-  syncPolicy:
-    preserveResourcesOnDeletion: true
-    applicationSetTerminationPolicy: Delete
-  strategy:
-    type: RollingSync
-    rollingSync:
-      steps:
-      - matchExpressions:
-        - key: environment
-          operator: In
-          values:
-          - development
-        maxUpdate: 100%
-      - matchExpressions:
-        - key: environment
-          operator: In
-          values:
-          - staging
-        maxUpdate: 100%
-      - matchExpressions:
-        - key: environment
-          operator: In
-          values:
-          - production
-        maxUpdate: 50%
-
-  # Env-specific overrides
-  templatePatch: |
-    {{- if eq .path.basename "production" }}
-    spec:
-      syncPolicy:
-        automated:
-          prune: false
-          selfHeal: false
-        syncOptions:
-        - CreateNamespace=true
-        - PrunePropagationPolicy=foreground
-        - PruneLast=true
-        - ServerSideApply=true
-        - RespectIgnoreDifferences=true
-      info:
-      - name: 'Production Notice'
-        value: 'This is a production environment - changes require approval'
-      - name: 'Sync Policy'
-        value: 'Manual sync and heal for safety'
-    {{- else if eq .path.basename "staging" }}
-    spec:
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-        - CreateNamespace=true
-        - ServerSideApply=true
-        - RespectIgnoreDifferences=true
-      info:
-      - name: 'Staging Notice'
-        value: 'Pre-production testing environment with automated sync'
-    {{- else }}
-    spec:
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-        - CreateNamespace=true
-        - ServerSideApply=true
-      info:
-      - name: 'Development Notice'
-        value: 'Development environment with full automation enabled'
-    {{- end }}
+  # No ApplicationSet-level strategy/syncPolicy for compatibility with older controllers
