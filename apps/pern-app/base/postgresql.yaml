@@ -17,6 +17,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: longhorn
   resources:
     requests:
       storage: 10Gi
@@ -30,6 +31,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: postgresql
@@ -38,6 +41,10 @@ spec:
       labels:
         app: postgresql
     spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
       containers:
       - name: postgresql
         image: postgres:15-alpine
@@ -59,6 +66,15 @@ spec:
             secretKeyRef:
               name: postgresql-secret
               key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         volumeMounts:
         - name: postgresql-storage
           mountPath: /var/lib/postgresql/data
@@ -68,16 +84,30 @@ spec:
             - pg_isready
             - -U
             - postgres
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
         readinessProbe:
           exec:
             command:
             - pg_isready
             - -U
             - postgres
-          initialDelaySeconds: 5
+          initialDelaySeconds: 30
           periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
       volumes:
       - name: postgresql-storage
         persistentVolumeClaim:
