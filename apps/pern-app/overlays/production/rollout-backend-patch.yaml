@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: backend
-  namespace: pern-app-production-production
+  namespace: pern-app-production
 spec:
   strategy:
     canary:

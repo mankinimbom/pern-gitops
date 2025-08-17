@@ -6,7 +6,7 @@ namespace: pern-app-production
 resources:
   - ../../base
 
-patches:
+patchesStrategicMerge:
   - replica-patch.yaml
   - resource-patch.yaml
   - rollout-backend-patch.yaml
