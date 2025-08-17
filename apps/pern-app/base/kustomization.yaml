@@ -3,8 +3,13 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - secrets.yaml
   - redis.yaml
   - postgresql.yaml
   - backend.yaml
   - frontend.yaml
   - ingress.yaml
+  - poddisruptionbudgets.yaml
+  - networkpolicies.yaml
+  - hpa.yaml
+  - servicemonitor.yaml
