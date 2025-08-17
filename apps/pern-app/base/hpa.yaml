@@ -2,6 +2,8 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: backend-hpa
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   scaleTargetRef:
     apiVersion: argoproj.io/v1alpha1
@@ -9,6 +11,11 @@ spec:
     name: backend
   minReplicas: 3
   maxReplicas: 10
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
   metrics:
   - type: Resource
     resource:
