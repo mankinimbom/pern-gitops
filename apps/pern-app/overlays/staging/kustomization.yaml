@@ -7,7 +7,6 @@ resources:
   - ../../base
 
 patches:
-  - path: namespace-patch.yaml
 
 # Environment-specific configurations
 namePrefix: staging-

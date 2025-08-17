@@ -7,7 +7,6 @@ resources:
   - ../../base
 
 patches:
-  - path: namespace-patch.yaml
   - path: replica-patch.yaml
   - path: resource-patch.yaml
   - path: rollout-patch.yaml

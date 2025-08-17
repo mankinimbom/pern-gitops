@@ -13,7 +13,6 @@ commonLabels:
 
 # Infrastructure resources (sync-wave: 0-1)
 resources:
-  - namespace.yaml
   - secrets.yaml
   - rbac.yaml
   
