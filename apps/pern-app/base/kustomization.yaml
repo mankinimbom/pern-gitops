@@ -4,11 +4,10 @@ kind: Kustomization
 # Base configuration for PERN application
 metadata:
   name: pern-app-base
-  annotations:
-    config.kubernetes.io/local-config: "true"
 
 # Common labels applied to all resources
-commonLabels:
+labels:
+- pairs:
   app.kubernetes.io/name: pern-app
   app.kubernetes.io/version: "1.0.0"
   app.kubernetes.io/managed-by: kustomize

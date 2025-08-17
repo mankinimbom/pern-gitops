@@ -14,12 +14,13 @@ namePrefix: staging-
 nameSuffix: -stage
 
 # Staging environment labels
-commonLabels:
-  environment: staging
-  tier: staging
-  app.kubernetes.io/component: full-stack
-  app.kubernetes.io/managed-by: argocd
-  app.kubernetes.io/part-of: pern-application
+labels:
+- pairs:
+    environment: staging
+    tier: staging
+    app.kubernetes.io/component: full-stack
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: pern-application
 
 # Staging typically uses latest or branch-specific images
 images:

@@ -4,15 +4,15 @@ kind: Kustomization
 metadata:
   name: pern-gitops-root
   annotations:
-    config.kubernetes.io/local-config: "true"
     gitops.argocd.argoproj.io/app-of-apps: "true"
     gitops.argocd.argoproj.io/description: "Root GitOps configuration for PERN stack application"
 
 # Common labels for all resources managed by this root kustomization
-commonLabels:
-  app.kubernetes.io/part-of: pern-gitops
-  app.kubernetes.io/managed-by: kustomize
-  gitops.deployment/root: "true"
+labels:
+- pairs:
+    app.kubernetes.io/part-of: pern-gitops
+    app.kubernetes.io/managed-by: kustomize
+    gitops.deployment/root: "true"
 
 # Resources organized by deployment order and dependency
 resources:

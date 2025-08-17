@@ -40,6 +40,10 @@ spec:
   - namespace: 'pern-app-development'
     server: 'https://kubernetes.default.svc'
     name: 'development-cluster'
+  # Base namespace (shared resources/tests)
+  - namespace: 'pern-app'
+    server: 'https://kubernetes.default.svc'
+    name: 'base-cluster'
   # ArgoCD management
   - namespace: 'argocd'
     server: 'https://kubernetes.default.svc'
@@ -335,8 +339,16 @@ spec:
   
   # Deny production deployments outside business hours (security)
   - kind: deny
-    schedule: '0 18-8 * * *'     # 6 PM to 8 AM daily
-    duration: 14h
+    schedule: '0 18-23 * * *'     # 6 PM to 11 PM daily
+    duration: 6h
+    applications:
+    - pern-app-production
+    timeZone: 'UTC'
+    namespaces:
+    - pern-app-production
+  - kind: deny
+    schedule: '0 0-8 * * *'       # 12 AM to 8 AM daily
+    duration: 9h
     applications:
     - pern-app-production
     timeZone: 'UTC'
