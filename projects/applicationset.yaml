@@ -16,40 +16,15 @@ spec:
       revision: HEAD
       directories:
       - path: apps/pern-app/overlays/*
-        exclude: 'apps/pern-app/overlays/.*'
       template:
         metadata: {}
         spec:
           source:
+            repoURL: https://github.com/mankinimbom/pern-gitops
             targetRevision: HEAD
+          destination:
+            server: https://kubernetes.default.svc
           project: pern-app
-  
-  # Matrix generator combining environments with configuration
-  - matrix:
-      generators:
-      - git:
-          repoURL: https://github.com/mankinimbom/pern-gitops
-          revision: HEAD
-          files:
-          - path: apps/pern-app/overlays/*/config.json
-      - clusters:
-          selector:
-            matchLabels:
-              environment: '{{.environment}}'
-  
-  # Merge generator for progressive delivery across environments
-  - merge:
-      mergeKeys: ['server']
-      generators:
-      - clusters:
-          selector:
-            matchLabels:
-              argocd.argoproj.io/secret-type: cluster
-      - git:
-          repoURL: https://github.com/mankinimbom/pern-gitops
-          revision: HEAD
-          directories:
-          - path: apps/pern-app/overlays/*
 
   template:
     metadata:
