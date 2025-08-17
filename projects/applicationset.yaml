@@ -101,7 +101,7 @@ spec:
       - name: 'Git Path'
         value: '{{.path.path}}'
       - name: 'Repository'
-        value: '{{.repoURL}}'
+        value: 'https://github.com/mankinimbom/pern-gitops'
       
       # Progressive sync for production
       revisionHistoryLimit: 10
