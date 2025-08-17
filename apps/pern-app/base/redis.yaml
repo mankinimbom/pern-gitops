@@ -23,7 +23,7 @@ metadata:
   namespace: pern-app
 type: Opaque
 stringData:
-  password: "${REDIS_PASSWORD}"
+  password: "your_redis_password"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -33,6 +33,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: longhorn
   resources:
     requests:
       storage: 1Gi
