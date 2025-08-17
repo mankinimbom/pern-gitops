@@ -14,6 +14,8 @@ spec:
   
   # Environment-specific destination namespaces
   destinations:
+  - namespace: 'pern-app'
+    server: 'https://kubernetes.default.svc'
   - namespace: 'pern-app-staging'
     server: 'https://kubernetes.default.svc'
   - namespace: 'pern-app-production'
