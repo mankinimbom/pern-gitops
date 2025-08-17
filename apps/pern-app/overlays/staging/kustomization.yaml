@@ -6,6 +6,22 @@ namespace: pern-app-staging
 resources:
   - ../../base
 
+patchesStrategicMerge:
+  - namespace-patch.yaml
+
+# Environment-specific configurations
+namePrefix: staging-
+nameSuffix: -stage
+
+# Staging environment labels
+commonLabels:
+  environment: staging
+  tier: staging
+  app.kubernetes.io/component: full-stack
+  app.kubernetes.io/managed-by: argocd
+  app.kubernetes.io/part-of: pern-application
+
+# Staging typically uses latest or branch-specific images
 images:
   - name: ghcr.io/mankinimbom/pern-backend
     newTag: 788cdd4c047fa5e20e5f526880612421a5049d24

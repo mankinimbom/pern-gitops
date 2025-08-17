@@ -1,8 +1,70 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+metadata:
+  name: pern-gitops-root
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    gitops.argocd.argoproj.io/app-of-apps: "true"
+    gitops.argocd.argoproj.io/description: "Root GitOps configuration for PERN stack application"
+
+# Common labels for all resources managed by this root kustomization
+commonLabels:
+  app.kubernetes.io/part-of: pern-gitops
+  app.kubernetes.io/managed-by: kustomize
+  gitops.deployment/root: "true"
+
+# Resources organized by deployment order and dependency
 resources:
+  # Phase 1: Core infrastructure and governance (sync-wave: 0)
   - projects/appproject.yaml
   - projects/analysis-template.yaml
-  - apps/pern-app-production.yaml
-  - apps/pern-app-staging.yaml
+  - projects/frontend-analysis-template.yaml
+  
+  # Phase 2: Application management and discovery (sync-wave: 1)
+  - projects/applicationset.yaml
+  
+  # Phase 3: Environment-specific applications (managed by ApplicationSet)
+  # Note: Individual apps are now managed by ApplicationSet
+  # - apps/pern-app-production.yaml  # Commented out - managed by ApplicationSet
+  # - apps/pern-app-staging.yaml    # Commented out - managed by ApplicationSet
+
+# Namespace management for GitOps deployment
+namespace: argocd
+
+# Common annotations for deployment orchestration
+commonAnnotations:
+  # Deployment orchestration
+  deployment.argocd.argoproj.io/phase: "bootstrap"
+  deployment.argocd.argoproj.io/pattern: "app-of-apps"
+  
+  # Security and compliance
+  security.argocd.argoproj.io/policy-enforced: "true"
+  compliance.argocd.argoproj.io/rbac-enabled: "true"
+  
+  # Monitoring and observability
+  monitoring.argocd.argoproj.io/enabled: "true"
+  observability.argocd.argoproj.io/prometheus: "enabled"
+  
+  # Change management
+  change.argocd.argoproj.io/approval-required: "production"
+  change.argocd.argoproj.io/sync-window: "controlled"
+
+# Config map generator for GitOps metadata
+configMapGenerator:
+- name: pern-gitops-metadata
+  literals:
+  - app.name=pern-stack
+  - app.version=v1.0.0
+  - deployment.strategy=progressive
+  - environments=production,staging,development
+  - components=frontend,backend,database,cache
+  - architecture=microservices
+  - security.enabled=true
+  - monitoring.enabled=true
+  - scaling.enabled=true
+  options:
+    disableNameSuffixHash: true
+    labels:
+      app.kubernetes.io/component: metadata
+      gitops.argocd.argoproj.io/config: "true"

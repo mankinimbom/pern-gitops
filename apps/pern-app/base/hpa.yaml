@@ -42,6 +42,12 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-hpa
   namespace: pern-app
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   scaleTargetRef:
     apiVersion: argoproj.io/v1alpha1

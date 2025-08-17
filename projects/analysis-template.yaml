@@ -1,33 +1,103 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: success-rate
-  namespace: pern-app
+  name: success-rate-analysis
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: success-rate-analysis
+    app.kubernetes.io/component: analysis-template
+    app.kubernetes.io/part-of: pern-gitops
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    analysis.argoproj.io/description: "Production-grade success rate analysis for progressive delivery"
 spec:
   args:
   - name: service-name
+    description: "Name of the service to analyze"
+  - name: namespace
+    description: "Namespace where the service is deployed"
+    value: "pern-app-production"
+  - name: success-rate-threshold
+    description: "Minimum success rate threshold"
+    value: "99"
+  - name: error-rate-threshold  
+    description: "Maximum error rate threshold"
+    value: "1"
+  - name: response-time-threshold
+    description: "Maximum response time in milliseconds"
+    value: "500"
+  
   metrics:
+  # Primary metric: HTTP success rate
   - name: success-rate
-    interval: 10s
-    successCondition: result[0] >= 0.95
-    failureCondition: result[0] < 0.90
+    successCondition: result[0] >= {{args.success-rate-threshold}}
+    failureCondition: result[0] < 95
+    interval: 30s
+    count: 10
+    failureLimit: 3
     provider:
       prometheus:
-        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        address: http://prometheus.monitoring.svc.cluster.local:9090
         query: |
-          sum(irate(
-            nginx_ingress_controller_requests{
-              service="{{args.service-name}}",
-              status!~"5.*"
-            }[2m]
-          )) / 
-          sum(irate(
-            nginx_ingress_controller_requests{
-              service="{{args.service-name}}"
-            }[2m]
-          ))
+          sum(rate(http_requests_total{service="{{args.service-name}}", namespace="{{args.namespace}}", code=~"2.."}[2m])) / 
+          sum(rate(http_requests_total{service="{{args.service-name}}", namespace="{{args.namespace}}"}[2m])) * 100
   
-  - name: avg-response-time
+  # Secondary metric: Error rate monitoring
+  - name: error-rate
+    successCondition: result[0] <= {{args.error-rate-threshold}}
+    failureCondition: result[0] > 5
+    interval: 30s
+    count: 10
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus.monitoring.svc.cluster.local:9090
+        query: |
+          sum(rate(http_requests_total{service="{{args.service-name}}", namespace="{{args.namespace}}", code=~"5.."}[2m])) / 
+          sum(rate(http_requests_total{service="{{args.service-name}}", namespace="{{args.namespace}}"}[2m])) * 100
+  
+  # Tertiary metric: Response time (P95)
+  - name: response-time-p95
+    successCondition: result[0] <= {{args.response-time-threshold}}
+    failureCondition: result[0] > 1000
+    interval: 30s
+    count: 10
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus.monitoring.svc.cluster.local:9090
+        query: |
+          histogram_quantile(0.95, 
+            sum(rate(http_request_duration_seconds_bucket{service="{{args.service-name}}", namespace="{{args.namespace}}"}[2m])) by (le)
+          ) * 1000
+  
+  # CPU utilization monitoring
+  - name: cpu-utilization
+    successCondition: result[0] <= 80
+    failureCondition: result[0] > 90
+    interval: 30s
+    count: 5
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus.monitoring.svc.cluster.local:9090
+        query: |
+          avg(rate(container_cpu_usage_seconds_total{pod=~"{{args.service-name}}-.*", namespace="{{args.namespace}}"}[2m])) * 100
+  
+  # Memory utilization monitoring
+  - name: memory-utilization
+    successCondition: result[0] <= 80
+    failureCondition: result[0] > 90
+    interval: 30s
+    count: 5
+    failureLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus.monitoring.svc.cluster.local:9090
+        query: |
+          avg(container_memory_working_set_bytes{pod=~"{{args.service-name}}-.*", namespace="{{args.namespace}}"}) / 
+          avg(container_spec_memory_limit_bytes{pod=~"{{args.service-name}}-.*", namespace="{{args.namespace}}"}) * 100
     interval: 10s
     successCondition: result[0] <= 500
     failureCondition: result[0] > 1000

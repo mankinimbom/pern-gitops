@@ -3,41 +3,305 @@ kind: ApplicationSet
 metadata:
   name: pern-app-set
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: pern-app-set
+    app.kubernetes.io/component: applicationset
+    app.kubernetes.io/part-of: pern-gitops
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    applicationset.argocd.argoproj.io/description: "Production-grade multi-environment PERN stack deployment"
 spec:
+  # Multiple generators for comprehensive environment discovery and management
   generators:
+  
+  # Primary Git-based generator for environment discovery
   - git:
       repoURL: https://github.com/mankinimbom/pern-gitops
       revision: HEAD
       directories:
       - path: apps/pern-app/overlays/*
-      - path: apps/pern-app/overlays/staging
-      - path: apps/pern-app/overlays/production
+      template:
+        metadata:
+          environment: '{{path.basename}}'
+          tier: '{{path.basename}}'
+        spec: {}
   
+  # Matrix generator for combining environments with different configurations
+  - matrix:
+      generators:
+      # Environment discovery
+      - git:
+          repoURL: https://github.com/mankinimbom/pern-gitops
+          revision: HEAD
+          directories:
+          - path: apps/pern-app/overlays/*
+      
+      # Configuration variants (could be used for different regions, etc.)
+      - list:
+          elements:
+          - config: default
+            syncPolicy: automated
+          - config: safe
+            syncPolicy: manual
+  
+  # Cluster generator (for multi-cluster deployments in the future)
+  - clusters:
+      selector:
+        matchLabels:
+          environment: '{{metadata.labels.environment}}'
+      template:
+        metadata: {}
+        spec:
+          source:
+            path: 'apps/pern-app/overlays/{{metadata.labels.environment}}'
+  
+  # Global application template with comprehensive configuration
   template:
     metadata:
       name: 'pern-app-{{path.basename}}'
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: pern-app
+        app.kubernetes.io/instance: '{{path.basename}}'
+        app.kubernetes.io/component: application
+        app.kubernetes.io/part-of: pern-application
+        app.kubernetes.io/managed-by: argocd
+        environment: '{{path.basename}}'
+        tier: '{{path.basename}}'
+        deployment.strategy: progressive-delivery
+      annotations:
+        # Comprehensive notification setup
+        notifications.argoproj.io/subscribe.on-deployed.slack: pern-deployments
+        notifications.argoproj.io/subscribe.on-sync-succeeded.slack: pern-deployments
+        notifications.argoproj.io/subscribe.on-sync-failed.slack: pern-alerts
+        notifications.argoproj.io/subscribe.on-health-degraded.slack: pern-alerts
+        notifications.argoproj.io/subscribe.on-sync-running.teams: pern-ops
+        
+        # Application metadata
+        app.argocd.argoproj.io/environment: '{{path.basename}}'
+        app.argocd.argoproj.io/repo: 'pern-gitops'
+        app.argocd.argoproj.io/path: '{{path}}'
+        
+        # Deployment tracking
+        deployment.argocd.argoproj.io/strategy: 'progressive'
+        deployment.argocd.argoproj.io/rollout-enabled: 'true'
+        
+        # Environment-specific annotations
+        '{{- if eq path.basename "production" }}'
+        deployment.argocd.argoproj.io/approval-required: 'true'
+        compliance.argocd.argoproj.io/security-scan: 'required'
+        '{{- end }}'
+        
+        '{{- if eq path.basename "staging" }}'
+        testing.argocd.argoproj.io/automation: 'enabled'
+        deployment.argocd.argoproj.io/preview: 'enabled'
+        '{{- end }}'
+        
       finalizers:
       - resources-finalizer.argocd.argoproj.io
+      
     spec:
       project: pern-app
+      
       source:
         repoURL: https://github.com/mankinimbom/pern-gitops
         targetRevision: HEAD
         path: '{{path}}'
+      
       destination:
         server: https://kubernetes.default.svc
-        namespace: pern-app
+        namespace: 'pern-app-{{path.basename}}'
+      
+      # Environment-specific sync policies
+      syncPolicy:
+        # Automated sync for non-production environments
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        
+        # Comprehensive sync options for reliability
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+        - PruneLast=true
+        - ServerSideApply=true
+        - RespectIgnoreDifferences=true
+        - ApplyOutOfSyncOnly=true
+        - Replace=false
+        
+        # Managed namespace metadata for proper labeling
+        managedNamespaceMetadata:
+          labels:
+            app.kubernetes.io/name: pern-app
+            app.kubernetes.io/instance: '{{path.basename}}'
+            environment: '{{path.basename}}'
+            managed-by: argocd
+            pod-security.kubernetes.io/enforce: restricted
+            pod-security.kubernetes.io/audit: restricted
+            pod-security.kubernetes.io/warn: restricted
+          annotations:
+            deployment.argocd.argoproj.io/environment: '{{path.basename}}'
+        
+        # Robust retry policy
+        retry:
+          limit: 10
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 5m
+        
+      # Comprehensive ignore differences for dynamic resources
+      ignoreDifferences:
+      # Argo Rollouts dynamic fields
+      - group: argoproj.io
+        kind: Rollout
+        jsonPointers:
+        - /spec/replicas
+        - /status
+        - /metadata/generation
+      
+      # HPA dynamic scaling
+      - group: autoscaling
+        kind: HorizontalPodAutoscaler
+        jsonPointers:
+        - /spec/targetRef/apiVersion
+        - /status/currentReplicas
+        - /status/desiredReplicas
+      
+      # StatefulSet for databases
+      - group: apps
+        kind: StatefulSet
+        jsonPointers:
+        - /spec/replicas
+        - /status
+        - /spec/volumeClaimTemplates/*/metadata/creationTimestamp
+      
+      # Service dynamic endpoints
+      - group: ''
+        kind: Service
+        jsonPointers:
+        - /spec/clusterIP
+        - /metadata/resourceVersion
+      
+      # Secrets managed by external systems
+      - group: ''
+        kind: Secret
+        jsonPointers:
+        - /data
+        - /metadata/resourceVersion
+        jqPathExpressions:
+        - '.metadata.labels."cert-manager.io/certificate-name"'
+      
+      # Ingress dynamic status
+      - group: networking.k8s.io
+        kind: Ingress
+        jsonPointers:
+        - /status
+        - /metadata/generation
+      
+      # Application info for monitoring and documentation
+      info:
+      - name: 'Environment'
+        value: '{{path.basename}}'
+      - name: 'Repository'
+        value: 'https://github.com/mankinimbom/pern-gitops'
+      - name: 'Path'
+        value: '{{path}}'
+      - name: 'Deployment Strategy'
+        value: 'Progressive Delivery with Argo Rollouts'
+      - name: 'Components'
+        value: 'Frontend (React), Backend (Node.js), Database (PostgreSQL), Cache (Redis)'
+      - name: 'Monitoring'
+        value: 'Prometheus metrics, Grafana dashboards'
+      - name: 'Security'
+        value: 'Network policies, RBAC, Pod security standards'
+      - name: 'Scaling'
+        value: 'Horizontal Pod Autoscaler based on CPU/Memory'
+      
+      # Revision history for rollback capabilities
+      revisionHistoryLimit: 10
+  
+  # ApplicationSet-level sync policy
+  syncPolicy:
+    # Preserve applications when ApplicationSet is deleted
+    preserveResourcesOnDeletion: true
+    
+    # Application deletion policy
+    applicationSetTerminationPolicy: Delete
+  
+  # Strategy for application updates
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+      # Step 1: Update development first
+      - matchExpressions:
+        - key: environment
+          operator: In
+          values:
+          - development
+        maxUpdate: 100%
+      
+      # Step 2: Update staging after development succeeds
+      - matchExpressions:
+        - key: environment
+          operator: In
+          values:
+          - staging
+        maxUpdate: 100%
+      
+      # Step 3: Update production last with careful rollout
+      - matchExpressions:
+        - key: environment
+          operator: In
+          values:
+          - production
+        maxUpdate: 50%  # Canary-style update for production
+  
+  # Template patches for environment-specific customization
+  templatePatch: |
+    {{- if eq .path.basename "production" }}
+    spec:
+      syncPolicy:
+        automated:
+          prune: false  # Manual pruning for production
+          selfHeal: false  # Manual healing for production
+        syncOptions:
+        - CreateNamespace=true
+        - PrunePropagationPolicy=foreground
+        - PruneLast=true
+        - ServerSideApply=true
+        - RespectIgnoreDifferences=true
+      info:
+      - name: 'Production Notice'
+        value: 'This is a production environment - changes require approval'
+      - name: 'Sync Policy'
+        value: 'Manual sync and heal for safety'
+    {{- else if eq .path.basename "staging" }}
+    spec:
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
         - CreateNamespace=true
-        - PrunePropagationPolicy=foreground
-        - PruneLast=true
-        retry:
-          limit: 5
-          backoff:
-            duration: 5s
-            factor: 2
-            maxDuration: 3m
+        - ServerSideApply=true
+        - RespectIgnoreDifferences=true
+      info:
+      - name: 'Staging Notice'
+        value: 'Pre-production testing environment with automated sync'
+    {{- else }}
+    spec:
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
+      info:
+      - name: 'Development Notice'
+        value: 'Development environment with full automation enabled'
+    {{- end }}

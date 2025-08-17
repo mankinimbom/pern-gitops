@@ -7,8 +7,22 @@ resources:
   - ../../base
 
 patchesStrategicMerge:
+  - namespace-patch.yaml
   - replica-patch.yaml
   - resource-patch.yaml
+  - rollout-patch.yaml
+
+# Environment-specific configurations
+namePrefix: production-
+nameSuffix: -prod
+
+# Production environment labels
+commonLabels:
+  environment: production
+  tier: production
+  app.kubernetes.io/component: full-stack
+  app.kubernetes.io/managed-by: argocd
+  app.kubernetes.io/part-of: pern-application
 
 images:
   - name: ghcr.io/mankinimbom/pern-backend

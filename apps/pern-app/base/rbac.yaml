@@ -1,0 +1,168 @@
+# RBAC Configuration for PERN Application Service Accounts
+---
+# Role for Backend Service Account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: pern-app
+  name: backend-role
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+# Database access permissions
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["postgres-secret", "database-credentials"]
+  verbs: ["get", "watch"]
+# Service discovery permissions
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# Pod metadata permissions
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+# ConfigMap permissions for configuration
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["backend-config", "app-config"]
+  verbs: ["get", "watch"]
+
+---
+# RoleBinding for Backend Service Account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backend-rolebinding
+  namespace: pern-app
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+subjects:
+- kind: ServiceAccount
+  name: backend-service-account
+  namespace: pern-app
+roleRef:
+  kind: Role
+  name: backend-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Role for Frontend Service Account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: pern-app
+  name: frontend-role
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+# Service discovery permissions
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# Pod metadata permissions
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+# ConfigMap permissions for configuration
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["frontend-config", "app-config"]
+  verbs: ["get", "watch"]
+
+---
+# RoleBinding for Frontend Service Account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: frontend-rolebinding
+  namespace: pern-app
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+subjects:
+- kind: ServiceAccount
+  name: frontend-service-account
+  namespace: pern-app
+roleRef:
+  kind: Role
+  name: frontend-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ClusterRole for Metrics Collection (shared across both services)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pern-app-metrics-reader
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+# Metrics collection permissions
+- apiGroups: [""]
+  resources: ["pods", "nodes", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+
+---
+# ClusterRoleBinding for Backend Metrics
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backend-metrics-binding
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+subjects:
+- kind: ServiceAccount
+  name: backend-service-account
+  namespace: pern-app
+roleRef:
+  kind: ClusterRole
+  name: pern-app-metrics-reader
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ClusterRoleBinding for Frontend Metrics
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: frontend-metrics-binding
+  labels:
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: pern-application
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+subjects:
+- kind: ServiceAccount
+  name: frontend-service-account
+  namespace: pern-app
+roleRef:
+  kind: ClusterRole
+  name: pern-app-metrics-reader
+  apiGroup: rbac.authorization.k8s.io

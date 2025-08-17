@@ -1,15 +1,40 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Base configuration for PERN application
+metadata:
+  name: pern-app-base
+  annotations:
+    config.kubernetes.io/local-config: "true"
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: pern-app
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: kustomize
+
+# Infrastructure resources (sync-wave: 0-1)
 resources:
   - namespace.yaml
   - secrets.yaml
+  - rbac.yaml
+  
+  # Data layer (sync-wave: 1)
   - redis.yaml
   - postgresql.yaml
+  
+  # Application layer (sync-wave: 2-3)
   - backend.yaml
   - frontend.yaml
+  
+  # Network layer (sync-wave: 4)
   - ingress.yaml
+  
+  # Policies and monitoring (sync-wave: 5)
   - poddisruptionbudgets.yaml
   - networkpolicies.yaml
   - hpa.yaml
   - servicemonitor.yaml
+
+# Resource ordering for better dependency management
+# ArgoCD will respect sync-waves defined in the resources

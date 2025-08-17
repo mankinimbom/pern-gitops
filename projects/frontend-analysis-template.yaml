@@ -1,0 +1,172 @@
+# Frontend Performance Analysis Template for Progressive Delivery
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-performance-analysis
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: frontend-performance-analysis
+    app.kubernetes.io/component: analysis-template
+    app.kubernetes.io/part-of: pern-gitops
+    app.kubernetes.io/managed-by: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    analysis.argoproj.io/description: "Frontend performance analysis for React application progressive delivery"
+spec:
+  args:
+  - name: service-name
+    description: "Name of the frontend service to analyze"
+  - name: namespace
+    description: "Namespace where the frontend service is deployed"
+    value: "pern-app-production"
+  - name: ingress-class
+    description: "Ingress class for routing analysis"
+    value: "nginx"
+  metrics:
+  # Frontend Response Time P95 Analysis
+  - name: frontend-response-time-p95
+    interval: 30s
+    count: 4
+    successCondition: result[0] <= 300
+    failureLimit: 2
+    inconclusiveLimit: 1
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          histogram_quantile(0.95, 
+            sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{
+              ingress="frontend-ingress",
+              namespace="{{args.namespace}}"
+            }[2m])) by (le)
+          ) * 1000
+  
+  # Frontend Response Time P99 Analysis
+  - name: frontend-response-time-p99
+    interval: 30s
+    count: 4
+    successCondition: result[0] <= 800
+    failureLimit: 2
+    inconclusiveLimit: 1
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          histogram_quantile(0.99, 
+            sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{
+              ingress="frontend-ingress",
+              namespace="{{args.namespace}}"
+            }[2m])) by (le)
+          ) * 1000
+  
+  # Frontend Error Rate Analysis
+  - name: frontend-error-rate
+    interval: 45s
+    count: 3
+    successCondition: result[0] <= 1
+    failureLimit: 2
+    inconclusiveLimit: 1
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          (
+            sum(rate(nginx_ingress_controller_requests{
+              ingress="frontend-ingress",
+              namespace="{{args.namespace}}",
+              status=~"4..|5.."
+            }[2m])) / 
+            sum(rate(nginx_ingress_controller_requests{
+              ingress="frontend-ingress",
+              namespace="{{args.namespace}}"
+            }[2m]))
+          ) * 100
+  
+  # Frontend Success Rate Analysis
+  - name: frontend-success-rate
+    interval: 60s
+    count: 3
+    successCondition: result[0] >= 99
+    failureLimit: 2
+    inconclusiveLimit: 1
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          (
+            sum(rate(nginx_ingress_controller_requests{
+              ingress="frontend-ingress",
+              namespace="{{args.namespace}}",
+              status!~"4..|5.."
+            }[2m])) / 
+            sum(rate(nginx_ingress_controller_requests{
+              ingress="frontend-ingress",
+              namespace="{{args.namespace}}"
+            }[2m]))
+          ) * 100
+  
+  # Frontend Resource Utilization Analysis
+  - name: frontend-resource-utilization
+    interval: 90s
+    count: 2
+    successCondition: result[0] <= 80 && result[1] <= 85
+    failureLimit: 3
+    inconclusiveLimit: 1
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          (
+            avg(rate(container_cpu_usage_seconds_total{
+              namespace="{{args.namespace}}", 
+              pod=~"frontend-.*",
+              container!="POD"
+            }[2m])) * 100,
+            avg(container_memory_working_set_bytes{
+              namespace="{{args.namespace}}", 
+              pod=~"frontend-.*",
+              container!="POD"
+            }) / avg(container_spec_memory_limit_bytes{
+              namespace="{{args.namespace}}", 
+              pod=~"frontend-.*",
+              container!="POD"
+            }) * 100
+          )
+  
+  # Frontend Traffic Volume Analysis
+  - name: frontend-traffic-volume
+    interval: 60s
+    count: 2
+    successCondition: result[0] >= 1
+    failureLimit: 1
+    inconclusiveLimit: 2
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          sum(rate(nginx_ingress_controller_requests{
+            ingress="frontend-ingress",
+            namespace="{{args.namespace}}"
+          }[2m])) * 60
+  
+  # Frontend Load Balancer Health
+  - name: frontend-lb-health
+    interval: 45s
+    count: 3
+    successCondition: result[0] >= 95
+    failureLimit: 2
+    inconclusiveLimit: 1
+    provider:
+      prometheus:
+        address: http://prometheus-server.monitoring.svc.cluster.local:80
+        query: |
+          (
+            count(up{
+              job=~".*{{args.service-name}}.*",
+              namespace="{{args.namespace}}"
+            } == 1) / 
+            count(up{
+              job=~".*{{args.service-name}}.*",
+              namespace="{{args.namespace}}"
+            })
+          ) * 100

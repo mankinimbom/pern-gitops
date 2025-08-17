@@ -5,7 +5,12 @@ metadata:
   namespace: pern-app
   labels:
     app: backend
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: pern-application
     release: prometheus
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   selector:
     matchLabels:
@@ -23,7 +28,12 @@ metadata:
   namespace: pern-app
   labels:
     app: postgresql
+    app.kubernetes.io/name: pern-app
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: pern-application
     release: prometheus
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   selector:
     matchLabels:
