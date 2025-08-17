@@ -14,10 +14,11 @@ images:
   newTag: main-a3e9cd3
 
 # Common labels for all production resources
-commonLabels:
-  environment: production
-  managed-by: argocd
-  app.kubernetes.io/part-of: pern-stack
+labels:
+- pairs:
+    environment: production
+    managed-by: argocd
+    app.kubernetes.io/part-of: pern-stack
 
 # Annotations for production tracking
 commonAnnotations:

@@ -38,6 +38,8 @@ spec:
         app: frontend
         app.kubernetes.io/name: frontend
         app.kubernetes.io/part-of: pern-stack
+        environment: production
+        managed-by: argocd
         version: v1
     spec:
       containers:

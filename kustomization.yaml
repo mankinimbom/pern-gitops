@@ -3,6 +3,10 @@ kind: Kustomization
 
 resources:
   - projects/appproject.yaml
+  - projects/prod-project.yaml
   - projects/analysis-template.yaml
+  - projects/frontend-analysis-template.yaml
+  - projects/manual-approval-template.yaml
+  - projects/applicationset.yaml
   - apps/pern-app-production.yaml
   - apps/pern-app-staging.yaml

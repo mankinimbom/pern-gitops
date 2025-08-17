@@ -53,6 +53,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-response-time
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
 spec:
   args:
   - name: service-name
@@ -96,6 +99,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-error-rate
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
 spec:
   args:
   - name: service-name
@@ -150,6 +156,9 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: backend-cpu-memory
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
 spec:
   args:
   - name: service-name
@@ -167,9 +176,10 @@ spec:
         address: "{{args.prometheus-server}}"
         query: |
           avg(rate(container_cpu_usage_seconds_total{
-            pod=~"backend-.*",
-            container="backend"
-          }[5m]))
+            pod=~".*",
+            container="backend",
+            namespace=~"pern-app-.*"
+          }[5m])) by (pod)
   
   - name: memory-usage
     interval: 60s
@@ -181,6 +191,7 @@ spec:
         address: "{{args.prometheus-server}}"
         query: |
           avg(container_memory_usage_bytes{
-            pod=~"backend-.*",
-            container="backend"
-          })
+            pod=~".*",
+            container="backend",
+            namespace=~"pern-app-.*"
+          }) by (pod)

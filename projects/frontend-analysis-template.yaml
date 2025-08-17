@@ -1,0 +1,197 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-success-rate
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
+spec:
+  args:
+  - name: service-name
+  - name: prometheus-server
+    value: http://prometheus-server.monitoring.svc.cluster.local:80
+  
+  metrics:
+  - name: success-rate
+    interval: 30s
+    count: 10
+    successCondition: result[0] >= 0.95
+    failureCondition: result[0] < 0.90
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          sum(rate(
+            nginx_ingress_controller_requests_total{
+              service="{{args.service-name}}",
+              status!~"5.*"
+            }[5m]
+          )) / 
+          sum(rate(
+            nginx_ingress_controller_requests_total{
+              service="{{args.service-name}}"
+            }[5m]
+          ))
+  
+  - name: p95-response-time
+    interval: 30s
+    count: 5
+    successCondition: result[0] <= 200
+    failureCondition: result[0] > 500
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          histogram_quantile(0.95,
+            sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{
+              service="{{args.service-name}}"
+            }[5m])) by (le)
+          ) * 1000
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-response-time
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
+spec:
+  args:
+  - name: service-name
+  - name: prometheus-server
+    value: http://prometheus-server.monitoring.svc.cluster.local:80
+  
+  metrics:
+  - name: avg-response-time
+    interval: 30s
+    count: 5
+    successCondition: result[0] <= 100
+    failureCondition: result[0] > 300
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          sum(rate(nginx_ingress_controller_request_duration_seconds_sum{
+            service="{{args.service-name}}"
+          }[5m])) / 
+          sum(rate(nginx_ingress_controller_request_duration_seconds_count{
+            service="{{args.service-name}}"
+          }[5m])) * 1000
+  
+  - name: p99-response-time
+    interval: 30s
+    count: 3
+    successCondition: result[0] <= 500
+    failureCondition: result[0] > 1000
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          histogram_quantile(0.99,
+            sum(rate(nginx_ingress_controller_request_duration_seconds_bucket{
+              service="{{args.service-name}}"
+            }[5m])) by (le)
+          ) * 1000
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-error-rate
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
+spec:
+  args:
+  - name: service-name
+  - name: prometheus-server
+    value: http://prometheus-server.monitoring.svc.cluster.local:80
+  
+  metrics:
+  - name: error-rate-4xx
+    interval: 30s
+    count: 5
+    successCondition: result[0] <= 0.02
+    failureCondition: result[0] > 0.05
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          sum(rate(
+            nginx_ingress_controller_requests_total{
+              service="{{args.service-name}}",
+              status=~"4.*"
+            }[5m]
+          )) / 
+          sum(rate(
+            nginx_ingress_controller_requests_total{
+              service="{{args.service-name}}"
+            }[5m]
+          ))
+  
+  - name: error-rate-5xx
+    interval: 30s
+    count: 5
+    successCondition: result[0] <= 0.001
+    failureCondition: result[0] > 0.01
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          sum(rate(
+            nginx_ingress_controller_requests_total{
+              service="{{args.service-name}}",
+              status=~"5.*"
+            }[5m]
+          )) / 
+          sum(rate(
+            nginx_ingress_controller_requests_total{
+              service="{{args.service-name}}"
+            }[5m]
+          ))
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: frontend-cpu-memory
+  labels:
+    app.kubernetes.io/component: analysis
+    app.kubernetes.io/part-of: pern-stack
+spec:
+  args:
+  - name: service-name
+  - name: prometheus-server
+    value: http://prometheus-server.monitoring.svc.cluster.local:80
+  
+  metrics:
+  - name: cpu-usage
+    interval: 60s
+    count: 3
+    successCondition: result[0] <= 0.5
+    failureCondition: result[0] > 0.7
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          avg(rate(container_cpu_usage_seconds_total{
+            pod=~".*",
+            container="frontend",
+            namespace=~"pern-app-.*"
+          }[5m])) by (pod)
+  
+  - name: memory-usage
+    interval: 60s
+    count: 3
+    successCondition: result[0] <= 200000000
+    failureCondition: result[0] > 300000000
+    provider:
+      prometheus:
+        address: "{{args.prometheus-server}}"
+        query: |
+          avg(container_memory_usage_bytes{
+            pod=~".*",
+            container="frontend",
+            namespace=~"pern-app-.*"
+          }) by (pod)

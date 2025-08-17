@@ -34,6 +34,8 @@ spec:
         app.kubernetes.io/name: backend
         app.kubernetes.io/component: api-server
         app.kubernetes.io/part-of: pern-stack
+        environment: production
+        managed-by: argocd
         version: v1
     spec:
       serviceAccountName: backend-service-account

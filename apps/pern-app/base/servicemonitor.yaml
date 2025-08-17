@@ -30,7 +30,6 @@ spec:
       replacement: pern_backend_health_status
   namespaceSelector:
     matchNames:
-    - pern-app
     - pern-app-staging
     - pern-app-production
 ---
@@ -49,6 +48,10 @@ spec:
   - port: postgres
     interval: 30s
     scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - pern-app-staging
+    - pern-app-production
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -65,3 +68,7 @@ spec:
   - port: redis
     interval: 30s
     scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+    - pern-app-staging
+    - pern-app-production
