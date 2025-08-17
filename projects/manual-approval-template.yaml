@@ -1,0 +1,138 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: manual-approval-production
+  namespace: pern-app
+  labels:
+    app.kubernetes.io/component: approval-gate
+    app.kubernetes.io/part-of: pern-stack
+    environment: production
+spec:
+  args:
+  - name: environment
+    value: production
+  - name: release-version
+  - name: approver-group
+    value: platform-team
+  
+  metrics:
+  - name: manual-approval
+    provider:
+      job:
+        spec:
+          template:
+            metadata:
+              labels:
+                app: manual-approval
+                environment: "{{args.environment}}"
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: approval-job
+                image: curlimages/curl:7.85.0
+                command: ["/bin/sh"]
+                args:
+                - -c
+                - |
+                  echo "🚀 Production Deployment Approval Required"
+                  echo "Environment: {{args.environment}}"
+                  echo "Release Version: {{args.release-version}}"
+                  echo "Approver Group: {{args.approver-group}}"
+                  echo ""
+                  echo "Please review the following before approval:"
+                  echo "1. Staging deployment completed successfully"
+                  echo "2. All tests passed"
+                  echo "3. Security scans completed"
+                  echo "4. Business stakeholders notified"
+                  echo ""
+                  echo "To approve this deployment, create an annotation on the rollout:"
+                  echo "kubectl annotate rollout backend -n pern-app-production deployment.argoproj.io/approved=true"
+                  echo ""
+                  echo "Waiting for manual approval..."
+                  
+                  # Poll for approval annotation every 30 seconds
+                  while true; do
+                    APPROVED=$(kubectl get rollout backend -n pern-app-production -o jsonpath='{.metadata.annotations.deployment\.argoproj\.io/approved}' 2>/dev/null || echo "")
+                    if [ "$APPROVED" = "true" ]; then
+                      echo "✅ Deployment approved by: $(kubectl get rollout backend -n pern-app-production -o jsonpath='{.metadata.annotations.deployment\.argoproj\.io/approved-by}' 2>/dev/null || echo 'system')"
+                      exit 0
+                    fi
+                    
+                    # Check for rejection
+                    REJECTED=$(kubectl get rollout backend -n pern-app-production -o jsonpath='{.metadata.annotations.deployment\.argoproj\.io/rejected}' 2>/dev/null || echo "")
+                    if [ "$REJECTED" = "true" ]; then
+                      echo "❌ Deployment rejected by: $(kubectl get rollout backend -n pern-app-production -o jsonpath='{.metadata.annotations.deployment\.argoproj\.io/rejected-by}' 2>/dev/null || echo 'system')"
+                      exit 1
+                    fi
+                    
+                    sleep 30
+                  done
+                securityContext:
+                  runAsNonRoot: true
+                  runAsUser: 65534
+                  readOnlyRootFilesystem: true
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              serviceAccountName: approval-job-sa
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: smoke-tests-production
+  namespace: pern-app
+spec:
+  args:
+  - name: service-url
+  - name: environment
+    value: production
+  
+  metrics:
+  - name: smoke-test-health
+    count: 1
+    successCondition: result == "1"
+    failureCondition: result != "1"
+    provider:
+      job:
+        spec:
+          template:
+            spec:
+              restartPolicy: Never
+              containers:
+              - name: smoke-test
+                image: curlimages/curl:7.85.0
+                command: ["/bin/sh"]
+                args:
+                - -c
+                - |
+                  echo "🧪 Running production smoke tests..."
+                  
+                  # Health check
+                  if ! curl -s -f "{{args.service-url}}/health" > /dev/null; then
+                    echo "❌ Health check failed"
+                    exit 1
+                  fi
+                  
+                  # Ready check
+                  if ! curl -s -f "{{args.service-url}}/ready" > /dev/null; then
+                    echo "❌ Ready check failed"
+                    exit 1
+                  fi
+                  
+                  # Basic API functionality
+                  if ! curl -s -f "{{args.service-url}}/api/users" > /dev/null; then
+                    echo "❌ API endpoint check failed"
+                    exit 1
+                  fi
+                  
+                  echo "✅ All smoke tests passed"
+                  echo "1"
+                securityContext:
+                  runAsNonRoot: true
+                  runAsUser: 65534
+                  readOnlyRootFilesystem: true
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL

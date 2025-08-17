@@ -3,97 +3,35 @@ kind: AppProject
 metadata:
   name: pern-app
   namespace: argocd
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: project
-    app.kubernetes.io/part-of: pern-gitops
-    app.kubernetes.io/managed-by: argocd
-    environment.type: multi-env
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
-    project.argocd.argoproj.io/description: "Production-grade PERN Stack with comprehensive governance"
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: |
-    Production-grade PERN Stack Application Project with comprehensive security and governance
-    Components: PostgreSQL + Express.js + React + Node.js
-    Features: Progressive delivery, monitoring, security policies, multi-environment support
+  description: Production-grade PERN Stack Application Project with security controls
   
-  # Enhanced source repository restrictions
+  # Repository allowlist with specific branch restrictions
   sourceRepos:
   - 'https://github.com/mankinimbom/pern-gitops'
-  - 'https://github.com/mankinimbom/pern-app'
-  - 'https://charts.bitnami.com/bitnami'
-  - 'https://prometheus-community.github.io/helm-charts'
-  - 'https://grafana.github.io/helm-charts'
   
-  # Comprehensive destination restrictions
+  # Environment-specific destination namespaces
   destinations:
-  # Production environment
-  - namespace: 'pern-app-production'
-    server: 'https://kubernetes.default.svc'
-    name: 'production-cluster'
-  # Staging environment  
   - namespace: 'pern-app-staging'
     server: 'https://kubernetes.default.svc'
-    name: 'staging-cluster'
-  # Development environment
-  - namespace: 'pern-app-development'
+  - namespace: 'pern-app-production'
     server: 'https://kubernetes.default.svc'
-    name: 'development-cluster'
-  # Base namespace (shared resources/tests)
-  - namespace: 'pern-app'
-    server: 'https://kubernetes.default.svc'
-    name: 'base-cluster'
-  # ArgoCD management
-  - namespace: 'argocd'
-    server: 'https://kubernetes.default.svc'
-    name: 'argocd-cluster'
-  # Monitoring namespace
   - namespace: 'monitoring'
     server: 'https://kubernetes.default.svc'
-    name: 'monitoring-cluster'
+  - namespace: 'argocd'
+    server: 'https://kubernetes.default.svc'
   
-  # Comprehensive cluster-scoped resource whitelist
+  # Cluster-level resources with minimal permissions
   clusterResourceWhitelist:
-  # Core resources
   - group: ''
     kind: Namespace
-  - group: ''
-    kind: Node
-  - group: ''
-    kind: PersistentVolume
-  # Networking
   - group: networking.k8s.io
     kind: Ingress
-  - group: networking.k8s.io
-    kind: IngressClass
-  - group: networking.k8s.io
-    kind: NetworkPolicy
-  # Security and certificates
-  - group: cert-manager.io
-    kind: ClusterIssuer
-  - group: cert-manager.io
-    kind: Certificate
-  # RBAC
-  - group: rbac.authorization.k8s.io
-    kind: ClusterRole
-  - group: rbac.authorization.k8s.io
-    kind: ClusterRoleBinding
-  # Custom Resource Definitions
-  - group: apiextensions.k8s.io
-    kind: CustomResourceDefinition
-  # Storage
-  - group: storage.k8s.io
-    kind: StorageClass
-  # Admission controllers
-  - group: admissionregistration.k8s.io
-    kind: ValidatingAdmissionWebhook
-  - group: admissionregistration.k8s.io
-    kind: MutatingAdmissionWebhook
-  
-  # Comprehensive namespace-scoped resource whitelist
+    
+  # Namespace-level resources with comprehensive coverage
   namespaceResourceWhitelist:
-  # Core resources
   - group: ''
     kind: Service
   - group: ''
@@ -104,191 +42,87 @@ spec:
     kind: PersistentVolumeClaim
   - group: ''
     kind: ServiceAccount
-  - group: ''
-    kind: Pod
-  - group: ''
-    kind: Endpoints
-  - group: ''
-    kind: Event
-  
-  # Workload resources with progressive delivery support
   - group: apps
     kind: Deployment
   - group: apps
     kind: StatefulSet
-  - group: apps
-    kind: DaemonSet
-  - group: apps
-    kind: ReplicaSet
-  
-  # Argo Rollouts for progressive delivery (CRITICAL for production)
   - group: argoproj.io
     kind: Rollout
   - group: argoproj.io
     kind: AnalysisTemplate
   - group: argoproj.io
     kind: AnalysisRun
-  - group: argoproj.io
-    kind: Experiment
-  - group: argoproj.io
-    kind: ClusterAnalysisTemplate
-  
-  # Networking and security
   - group: networking.k8s.io
     kind: Ingress
   - group: networking.k8s.io
     kind: NetworkPolicy
-  
-  # Autoscaling and policies
   - group: autoscaling
     kind: HorizontalPodAutoscaler
-  - group: autoscaling
-    kind: VerticalPodAutoscaler
   - group: policy
     kind: PodDisruptionBudget
-  - group: policy
-    kind: PodSecurityPolicy
-  
-  # Monitoring and observability
-  - group: monitoring.coreos.com
-    kind: ServiceMonitor
-  - group: monitoring.coreos.com
-    kind: PodMonitor
-  - group: monitoring.coreos.com
-    kind: PrometheusRule
-  - group: monitoring.coreos.com
-    kind: Alertmanager
-  
-  # RBAC
   - group: rbac.authorization.k8s.io
     kind: Role
   - group: rbac.authorization.k8s.io
     kind: RoleBinding
+  - group: monitoring.coreos.com
+    kind: ServiceMonitor
+  - group: monitoring.coreos.com
+    kind: PodMonitor
   
-  # Batch processing
-  - group: batch
-    kind: Job
-  - group: batch
-    kind: CronJob
-  
-  # Advanced RBAC with environment-specific permissions
-  roles:
-  # Platform Admin - Complete control across all environments
-  - name: platform-admin
-    description: Platform administrators with complete control over all PERN app resources and environments
-    policies:
-    - p, proj:pern-app:platform-admin, applications, *, pern-app/*, allow
-    - p, proj:pern-app:platform-admin, repositories, *, *, allow
-    - p, proj:pern-app:platform-admin, certificates, *, *, allow
-    - p, proj:pern-app:platform-admin, clusters, *, *, allow
-    - p, proj:pern-app:platform-admin, exec, *, pern-app/*, allow
-    - p, proj:pern-app:platform-admin, logs, *, pern-app/*, allow
-    groups:
-    - platform-admins
-    - argocd-admins
-    - system:masters
-  
-  # Production Admin - Production environment management with restrictions
-  - name: production-admin
-    description: Production environment administrators with controlled access
-    policies:
-    - p, proj:pern-app:production-admin, applications, get, pern-app-production/*, allow
-    - p, proj:pern-app:production-admin, applications, sync, pern-app-production/*, allow
-    - p, proj:pern-app:production-admin, applications, override, pern-app-production/*, allow
-    - p, proj:pern-app:production-admin, applications, delete, pern-app-production/*, deny
-    - p, proj:pern-app:production-admin, applications, logs, pern-app-production/*, allow
-    - p, proj:pern-app:production-admin, applications, action/*, pern-app-production/*, allow
-    - p, proj:pern-app:production-admin, repositories, get, *, allow
-    - p, proj:pern-app:production-admin, clusters, get, *, allow
-    groups:
-    - production-admins
-    - sre-team
-    - ops-team
-  
-  # Staging Admin - Full staging environment control
-  - name: staging-admin
-    description: Staging environment administrators with full control
-    policies:
-    - p, proj:pern-app:staging-admin, applications, *, pern-app-staging/*, allow
-    - p, proj:pern-app:staging-admin, applications, get, pern-app-development/*, allow
-    - p, proj:pern-app:staging-admin, applications, sync, pern-app-development/*, allow
-    - p, proj:pern-app:staging-admin, repositories, get, *, allow
-    - p, proj:pern-app:staging-admin, exec, *, pern-app-staging/*, allow
-    - p, proj:pern-app:staging-admin, exec, *, pern-app-development/*, allow
-    groups:
-    - staging-admins
-    - qa-leads
-  
-  # Developer - Development and staging access with exec permissions
-  - name: developer
-    description: Application developers with development and staging environment access
-    policies:
-    - p, proj:pern-app:developer, applications, get, pern-app-staging/*, allow
-    - p, proj:pern-app:developer, applications, get, pern-app-development/*, allow
-    - p, proj:pern-app:developer, applications, sync, pern-app-staging/*, allow
-    - p, proj:pern-app:developer, applications, sync, pern-app-development/*, allow
-    - p, proj:pern-app:developer, applications, history, pern-app-staging/*, allow
-    - p, proj:pern-app:developer, applications, history, pern-app-development/*, allow
-    - p, proj:pern-app:developer, applications, logs, pern-app-staging/*, allow
-    - p, proj:pern-app:developer, applications, logs, pern-app-development/*, allow
-    - p, proj:pern-app:developer, applications, action/*, pern-app-staging/*, allow
-    - p, proj:pern-app:developer, applications, action/*, pern-app-development/*, allow
-    - p, proj:pern-app:developer, repositories, get, *, allow
-    - p, proj:pern-app:developer, exec, create, pern-app-staging/*, allow
-    - p, proj:pern-app:developer, exec, create, pern-app-development/*, allow
-    groups:
-    - developers
-    - qa-team
-    - frontend-team
-    - backend-team
-  
-  # Production Viewer - Read-only production access for monitoring
-  - name: production-viewer
-    description: Read-only access to production for monitoring and troubleshooting
-    policies:
-    - p, proj:pern-app:production-viewer, applications, get, pern-app-production/*, allow
-    - p, proj:pern-app:production-viewer, applications, logs, pern-app-production/*, allow
-    - p, proj:pern-app:production-viewer, applications, history, pern-app-production/*, allow
-    - p, proj:pern-app:production-viewer, repositories, get, *, allow
-    - p, proj:pern-app:production-viewer, clusters, get, *, allow
-    groups:
-    - production-viewers
-    - monitoring-team
-    - business-stakeholders
-    - support-team
-  
-  # CI/CD Service Account - Automated deployment capabilities
-  - name: cicd-service
-    description: CI/CD pipeline service account for automated deployments
-    policies:
-    - p, proj:pern-app:cicd-service, applications, sync, pern-app-staging/*, allow
-    - p, proj:pern-app:cicd-service, applications, sync, pern-app-development/*, allow
-    - p, proj:pern-app:cicd-service, applications, get, pern-app/*, allow
-    - p, proj:pern-app:cicd-service, applications, create, pern-app-development/*, allow
-    - p, proj:pern-app:cicd-service, applications, update, pern-app-staging/*, allow
-    - p, proj:pern-app:cicd-service, applications, update, pern-app-development/*, allow
-    - p, proj:pern-app:cicd-service, repositories, get, *, allow
-    groups:
-    - system:serviceaccounts:cicd
-    - github-actions
-    - jenkins-agents
-  
-  # Enhanced security and governance
+  # Security and operational policies
   orphanedResources:
     warn: true
     ignore:
-    # Don't delete critical resources automatically
     - group: ''
       kind: Secret
-      name: '*-tls'
-    - group: ''
-      kind: PersistentVolumeClaim
-      name: '*'
-    - group: apps
-      kind: ReplicaSet
-      name: '*'
-    - group: argoproj.io
-      kind: AnalysisRun
-      name: '*'
+      name: '*-token-*'
   
-  # Sync windows temporarily disabled for deployment
+  # RBAC with principle of least privilege
+  roles:
+  - name: admin
+    description: Full admin access to PERN app environments
+    policies:
+    - p, proj:pern-app:admin, applications, *, pern-app/*, allow
+    - p, proj:pern-app:admin, repositories, *, *, allow
+    - p, proj:pern-app:admin, certificates, *, *, allow
+    - p, proj:pern-app:admin, accounts, *, *, allow
+    groups:
+    - argocd-admins
+    - platform-team
+  
+  - name: production-deployer
+    description: Production deployment permissions with restrictions
+    policies:
+    - p, proj:pern-app:production-deployer, applications, get, pern-app/*production*, allow
+    - p, proj:pern-app:production-deployer, applications, sync, pern-app/*production*, allow
+    - p, proj:pern-app:production-deployer, applications, action/*, pern-app/*production*, allow
+    groups:
+    - production-deployers
+    - senior-engineers
+  
+  - name: developer
+    description: Developer access with staging-only sync permissions
+    policies:
+    - p, proj:pern-app:developer, applications, get, pern-app/*, allow
+    - p, proj:pern-app:developer, applications, sync, pern-app/*staging*, allow
+    - p, proj:pern-app:developer, repositories, get, *, allow
+    - p, proj:pern-app:developer, logs, get, pern-app/*, allow
+    groups:
+    - argocd-developers
+    - engineering-team
+  
+  - name: viewer
+    description: Read-only access to applications
+    policies:
+    - p, proj:pern-app:viewer, applications, get, pern-app/*, allow
+    - p, proj:pern-app:viewer, logs, get, pern-app/*, allow
+    groups:
+    - stakeholders
+    - qa-team
+  
+  # Signature verification for enhanced security
+  signatureKeys:
+  - keyID: mankinimbom-signing-key
+  
+  # Git webhook restrictions
+  permitOnlyProjectScopedClusters: false

@@ -1,16 +1,15 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: backend-metrics
+  name: pern-app-backend
   namespace: pern-app
   labels:
-    app: backend
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: pern-application
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: pern-stack
     release: prometheus
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   selector:
     matchLabels:
@@ -20,6 +19,21 @@ spec:
     path: /metrics
     interval: 30s
     scrapeTimeout: 10s
+    honorLabels: true
+  - port: http
+    path: /health
+    interval: 60s
+    scrapeTimeout: 5s
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      targetLabel: __name__
+      replacement: pern_backend_health_status
+  namespaceSelector:
+    matchNames:
+    - pern-app
+    - pern-app-staging
+    - pern-app-production
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -28,12 +42,7 @@ metadata:
   namespace: pern-app
   labels:
     app: postgresql
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: database
-    app.kubernetes.io/part-of: pern-application
     release: prometheus
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
 spec:
   selector:
     matchLabels:

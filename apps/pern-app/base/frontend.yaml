@@ -3,271 +3,98 @@ kind: Rollout
 metadata:
   name: frontend
   namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: pern-application
-    app.kubernetes.io/version: "1.0.0"
-    app.kubernetes.io/managed-by: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
-    deployment.kubernetes.io/revision: "1"
-    rollouts.argoproj.io/revision: "1"
 spec:
   replicas: 3
-  revisionHistoryLimit: 5
-  progressDeadlineSeconds: 600
   strategy:
     canary:
-      maxSurge: "25%"
-      maxUnavailable: 1
       canaryService: frontend-canary-service
       stableService: frontend-service
       trafficRouting:
         nginx:
           stableIngress: frontend-ingress
-          canaryIngress: frontend-canary-ingress
-          additionalIngressAnnotations:
-            nginx.ingress.kubernetes.io/canary: "true"
+      steps:
+      - setWeight: 20
+      - pause: {}
+      - setWeight: 40
+      - pause: {duration: 10}
+      - setWeight: 60
+      - pause: {duration: 10}
+      - setWeight: 80
+      - pause: {duration: 10}
       analysis:
         templates:
-        - templateName: frontend-performance-analysis
         - templateName: success-rate
-        - templateName: comprehensive-health-analysis
         startingStep: 2
         args:
         - name: service-name
           value: frontend-canary-service
-        - name: namespace
-          value: pern-app
-        successCondition: result[0] >= 0.95
-        failureLimit: 3
-        inconclusiveLimit: 2
-      steps:
-      - setWeight: 10
-      - pause: {duration: 30s}
-      - analysis:
-          templates:
-          - templateName: frontend-performance-analysis
-          args:
-          - name: service-name
-            value: frontend-canary-service
-      - setWeight: 25
-      - pause: {duration: 60s}
-      - analysis:
-          templates:
-          - templateName: success-rate
-          - templateName: comprehensive-health-analysis
-          args:
-          - name: service-name
-            value: frontend-canary-service
-          - name: namespace
-            value: pern-app
-      - setWeight: 50
-      - pause: {duration: 120s}
-      - setWeight: 75
-      - pause: {duration: 180s}
-      - analysis:
-          templates:
-          - templateName: frontend-performance-analysis
-          - templateName: success-rate
-          - templateName: comprehensive-health-analysis
-          args:
-          - name: service-name
-            value: frontend-canary-service
-          - name: namespace
-            value: pern-app
   selector:
     matchLabels:
       app: frontend
-      app.kubernetes.io/component: frontend
   template:
     metadata:
       labels:
         app: frontend
-        app.kubernetes.io/name: pern-app
-        app.kubernetes.io/component: frontend
-        app.kubernetes.io/part-of: pern-application
-        version: "1.0.0"
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
-        prometheus.io/path: "/metrics"
-        rollouts.argoproj.io/pod-template-hash: frontend-template
     spec:
-      serviceAccountName: frontend-service-account
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 101
-        runAsGroup: 101
-        fsGroup: 101
-        seccompProfile:
-          type: RuntimeDefault
       containers:
       - name: frontend
         image: ghcr.io/mankinimbom/pern-frontend:latest
-        imagePullPolicy: Always
         ports:
-        - name: http
-          containerPort: 80
-          protocol: TCP
-        - name: metrics
-          containerPort: 9090
-          protocol: TCP
-        env:
-        - name: NODE_ENV
-          value: "production"
-        - name: NGINX_HOST
-          value: "0.0.0.0"
-        - name: NGINX_PORT
-          value: "80"
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 101
-          runAsGroup: 101
-          capabilities:
-            drop:
-            - ALL
-            add:
-            - NET_BIND_SERVICE
-          seccompProfile:
-            type: RuntimeDefault
+        - containerPort: 80
         livenessProbe:
           httpGet:
-            path: /health
-            port: http
-            scheme: HTTP
+            path: /
+            port: 80
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
-          successThreshold: 1
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /ready
-            port: http
-            scheme: HTTP
+            path: /
+            port: 80
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3
-          successThreshold: 1
           failureThreshold: 3
         startupProbe:
           httpGet:
-            path: /health
-            port: http
-            scheme: HTTP
+            path: /
+            port: 80
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
-          successThreshold: 1
           failureThreshold: 30
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-            ephemeral-storage: "1Gi"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
-            ephemeral-storage: "2Gi"
-        volumeMounts:
-        - name: tmp
-          mountPath: /tmp
-        - name: var-cache-nginx
-          mountPath: /var/cache/nginx
-        - name: var-run
-          mountPath: /var/run
-      volumes:
-      - name: tmp
-        emptyDir: {}
-      - name: var-cache-nginx
-        emptyDir: {}
-      - name: var-run
-        emptyDir: {}
-      terminationGracePeriodSeconds: 30
-      dnsPolicy: ClusterFirst
-      restartPolicy: Always
-      automountServiceAccountToken: true
 ---
-# Service Account for Frontend with RBAC
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: frontend-service-account
-  namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: pern-application
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-automountServiceAccountToken: true
-
----
-# Stable Service for Frontend
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
   namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: pern-application
-    service.type: stable
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9090"
-    prometheus.io/path: "/metrics"
 spec:
-  type: ClusterIP
   selector:
     app: frontend
-    app.kubernetes.io/component: frontend
   ports:
-  - name: http
-    port: 80
-    targetPort: http
-    protocol: TCP
-  - name: metrics
-    port: 9090
-    targetPort: metrics
-    protocol: TCP
-  sessionAffinity: None
-
+    - port: 80
+      targetPort: 80
 ---
-# Canary Service for Frontend Progressive Delivery
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-canary-service
   namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: frontend
-    app.kubernetes.io/part-of: pern-application
-    service.type: canary
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9090"
-    prometheus.io/path: "/metrics"
 spec:
-  type: ClusterIP
   selector:
     app: frontend
-    app.kubernetes.io/component: frontend
   ports:
-  - name: http
-    port: 80
-    targetPort: http
-    protocol: TCP
-  - name: metrics
-    port: 9090
-    targetPort: metrics
-    protocol: TCP
-  sessionAffinity: None
+    - port: 80
+      targetPort: 80

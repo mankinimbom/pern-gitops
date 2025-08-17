@@ -4,150 +4,154 @@ metadata:
   name: backend
   namespace: pern-app
   labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: pern-application
-    app.kubernetes.io/managed-by: argocd
-    deployment.strategy: progressive-delivery
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/component: api-server
+    app.kubernetes.io/part-of: pern-stack
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    rollout.argoproj.io/revision-history-limit: "10"
-    deployment.argoproj.io/strategy: "canary-with-analysis"
+    deployment.kubernetes.io/revision: "1"
 spec:
   replicas: 3
-  revisionHistoryLimit: 10
   
-  # Production-grade progressive delivery strategy
+  # Advanced canary deployment strategy with metrics-driven promotion
   strategy:
     canary:
       # Service routing configuration
       canaryService: backend-canary-service
       stableService: backend-service
       
-      # Traffic routing through ingress
+      # Traffic management
       trafficRouting:
         nginx:
-          stableIngress: pern-app-ingress
-          annotationPrefix: nginx.ingress.kubernetes.io
+          stableIngress: backend-ingress
           additionalIngressAnnotations:
-            canary-by-header: "X-Canary"
-            canary-by-header-value: "true"
+            nginx.ingress.kubernetes.io/canary-weight-total: "100"
       
-      # Comprehensive canary steps with automated analysis
+      # Progressive traffic shifting with analysis gates
       steps:
-      # Step 1: Deploy canary with 10% traffic, immediate analysis
       - setWeight: 10
-      - pause: {duration: 30s}
-      - analysis:
-          templates:
-          - templateName: success-rate-analysis
-          args:
-          - name: service-name
-            value: backend-canary-service
-          - name: namespace
-            value: pern-app
-          - name: success-rate-threshold
-            value: "99"
-          - name: error-rate-threshold
-            value: "0.5"
-      
-      # Step 2: Increase to 25% traffic with extended analysis
+      - pause: 
+          duration: 30s
       - setWeight: 25
-      - pause: {duration: 60s}
+      - pause: 
+          duration: 2m
       - analysis:
           templates:
-          - templateName: success-rate-analysis
-          - templateName: database-performance-analysis
+          - templateName: backend-success-rate
           args:
           - name: service-name
             value: backend-canary-service
-          - name: namespace
-            value: pern-app
-          - name: database-service
-            value: postgresql
-      
-      # Step 3: Increase to 50% traffic with comprehensive health check
+          - name: prometheus-server
+            value: http://prometheus-server.monitoring.svc.cluster.local:80
       - setWeight: 50
-      - pause: {duration: 120s}
+      - pause: 
+          duration: 5m
       - analysis:
           templates:
-          - templateName: success-rate-analysis
-          - templateName: comprehensive-health-analysis
+          - templateName: backend-success-rate
+          - templateName: backend-response-time
           args:
           - name: service-name
             value: backend-canary-service
-          - name: namespace
-            value: pern-app
-          - name: application-name
-            value: pern-app
-      
-      # Step 4: Increase to 75% traffic with final validation
       - setWeight: 75
-      - pause: {duration: 300s}  # 5-minute observation
+      - pause: 
+          duration: 10m
       - analysis:
           templates:
-          - templateName: success-rate-analysis
+          - templateName: backend-success-rate
+          - templateName: backend-response-time
+          - templateName: backend-error-rate
           args:
           - name: service-name
             value: backend-canary-service
-          - name: namespace
-            value: pern-app
-          - name: success-rate-threshold
-            value: "99.5"  # Stricter threshold for final step
-      
-      # Step 5: Full rollout after all validations pass
-      - setWeight: 100
       
       # Analysis configuration
       analysis:
         templates:
-        - templateName: success-rate-analysis
-        startingStep: 1  # Start analysis from first step
+        - templateName: backend-success-rate
+        startingStep: 3
         args:
         - name: service-name
           value: backend-canary-service
-        - name: namespace
-          value: pern-app
+        - name: prometheus-server
+          value: http://prometheus-server.monitoring.svc.cluster.local:80
       
-      # Automatic rollback configuration
-      scaleDownDelaySeconds: 600  # Keep old version for 10 minutes
-      abortScaleDownDelaySeconds: 300  # Quick abort cleanup
+      # Automatic rollback triggers
+      abort:
+        failureLimit: 3
+        
+      # Scale down behavior
+      scaleDownDelaySeconds: 300
+      abortScaleDownDelaySeconds: 600
       
-  # Pod template specification
   selector:
     matchLabels:
       app: backend
-      app.kubernetes.io/name: pern-app
-      app.kubernetes.io/component: backend
-  
+      app.kubernetes.io/name: backend
+      
   template:
     metadata:
       labels:
         app: backend
-        app.kubernetes.io/name: pern-app
-        app.kubernetes.io/component: backend
-        app.kubernetes.io/part-of: pern-application
-        app.kubernetes.io/version: "1.0.0"
-        deployment.strategy: progressive-delivery
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/component: api-server
+        app.kubernetes.io/part-of: pern-stack
+        app.kubernetes.io/version: "{{.Values.image.tag}}"
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "3001"
         prometheus.io/path: "/metrics"
+        
     spec:
-      # Security context for enhanced security
+      # Security context
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
-        fsGroup: 1001
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       
       # Service account for RBAC
-      serviceAccountName: backend-service-account
+      serviceAccountName: backend-sa
       
-      # Container specification
+      # Anti-affinity for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - backend
+              topologyKey: kubernetes.io/hostname
+          - weight: 50
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - backend
+              topologyKey: topology.kubernetes.io/zone
+      
+      # Topology spread constraints
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: backend
+      
       containers:
       - name: backend
-        image: ghcr.io/mankinimbom/pern-backend:latest
+        image: ghcr.io/mankinimbom/pern-backend:v1.0.0
+        imagePullPolicy: IfNotPresent
+        
         ports:
         - name: http
           containerPort: 3001
@@ -156,7 +160,7 @@ spec:
           containerPort: 9090
           protocol: TCP
         
-        # Enhanced environment configuration for production
+        # Enhanced environment configuration
         env:
         - name: NODE_ENV
           value: "production"
@@ -185,26 +189,23 @@ spec:
           value: "900000"
         - name: RATE_LIMIT_MAX_REQUESTS
           value: "1000"
-        # Additional production environment variables
         - name: METRICS_PORT
           value: "9090"
-        - name: HEALTH_CHECK_PATH
-          value: "/health"
-        - name: READY_CHECK_PATH
-          value: "/ready"
-        - name: GRACEFUL_SHUTDOWN_TIMEOUT
-          value: "30000"
-        - name: MAX_REQUEST_SIZE
-          value: "10mb"
-        - name: TRUST_PROXY
-          value: "true"
-        - name: SESSION_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: session-secret
+        - name: HEALTH_CHECK_TIMEOUT
+          value: "5000"
         
-        # Production-grade resource allocation
+        # Enhanced security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # Optimized resource allocation
         resources:
           requests:
             memory: "256Mi"
@@ -221,12 +222,12 @@ spec:
             path: /health
             port: http
             scheme: HTTP
-          initialDelaySeconds: 90
+          initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 3
           successThreshold: 1
-        
+          failureThreshold: 3
+          
         readinessProbe:
           httpGet:
             path: /ready
@@ -235,134 +236,83 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 5
           timeoutSeconds: 3
-          failureThreshold: 3
           successThreshold: 1
-        
+          failureThreshold: 3
+          
         startupProbe:
           httpGet:
             path: /health
             port: http
             scheme: HTTP
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 60  # Allow 5 minutes for startup
-          successThreshold: 1
-        
-        # Security context at container level
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 1001
-          runAsGroup: 1001
-          capabilities:
-            drop:
-            - ALL
-        
-        # Volume mounts for writable areas
-        volumeMounts:
-        - name: tmp-volume
-          mountPath: /tmp
-        - name: logs-volume
-          mountPath: /app/logs
-        - name: cache-volume
-          mountPath: /app/cache
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 3001
-          initialDelaySeconds: 30
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-        startupProbe:
-          httpGet:
-            path: /health
-            port: 3001
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 30
+        
+        # Volume mounts for writable directories
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: cache-volume
+          mountPath: /app/cache
+        - name: logs-volume
+          mountPath: /app/logs
+        
+        # Environment-specific lifecycle hooks
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+      
+      # Volumes for writable directories (read-only filesystem)
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: cache-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
+      
+      # DNS and networking configuration
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      
+      # Node selection and scheduling
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        node.kubernetes.io/instance-type: "!spot"
+      
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
 ---
-# Service Account for Backend with RBAC
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: backend-service-account
-  namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: pern-application
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-automountServiceAccountToken: true
-
----
-# Stable Service for Backend
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
   namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: pern-application
-    service.type: stable
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9090"
-    prometheus.io/path: "/metrics"
 spec:
-  type: ClusterIP
   selector:
     app: backend
-    app.kubernetes.io/component: backend
   ports:
-  - name: http
-    port: 3001
-    targetPort: http
-    protocol: TCP
-  - name: metrics
-    port: 9090
-    targetPort: metrics
-    protocol: TCP
-  sessionAffinity: None
-
+    - port: 3001
+      targetPort: 3001
 ---
-# Canary Service for Backend Progressive Delivery
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-canary-service
   namespace: pern-app
-  labels:
-    app.kubernetes.io/name: pern-app
-    app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: pern-application
-    service.type: canary
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "9090"
-    prometheus.io/path: "/metrics"
 spec:
-  type: ClusterIP
   selector:
     app: backend
-    app.kubernetes.io/component: backend
   ports:
-  - name: http
-    port: 3001
-    targetPort: http
-    protocol: TCP
-  - name: metrics
-    port: 9090
-    targetPort: metrics
-    protocol: TCP
-  sessionAffinity: None
+    - port: 3001
+      targetPort: 3001

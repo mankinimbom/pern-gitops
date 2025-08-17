@@ -3,128 +3,130 @@ kind: ApplicationSet
 metadata:
   name: pern-app-set
   namespace: argocd
-  labels:
-    app.kubernetes.io/name: pern-app-set
-    app.kubernetes.io/component: applicationset
-    app.kubernetes.io/part-of: pern-gitops
-    app.kubernetes.io/managed-by: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
-    applicationset.argocd.argoproj.io/description: "Production-grade multi-environment PERN stack deployment"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
-  # Single git generator discovers environment overlays
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  
   generators:
+  # Git-based generator for environment-specific configurations
   - git:
       repoURL: https://github.com/mankinimbom/pern-gitops
       revision: HEAD
       directories:
       - path: apps/pern-app/overlays/*
+        exclude: 'apps/pern-app/overlays/.*'
+      template:
+        metadata: {}
+        spec:
+          source:
+            targetRevision: HEAD
+          project: pern-app
+  
+  # Matrix generator combining environments with configuration
+  - matrix:
+      generators:
+      - git:
+          repoURL: https://github.com/mankinimbom/pern-gitops
+          revision: HEAD
+          files:
+          - path: apps/pern-app/overlays/*/config.json
+      - clusters:
+          selector:
+            matchLabels:
+              environment: '{{.environment}}'
+  
+  # Merge generator for progressive delivery across environments
+  - merge:
+      mergeKeys: ['server']
+      generators:
+      - clusters:
+          selector:
+            matchLabels:
+              argocd.argoproj.io/secret-type: cluster
+      - git:
+          repoURL: https://github.com/mankinimbom/pern-gitops
+          revision: HEAD
+          directories:
+          - path: apps/pern-app/overlays/*
 
-  # Global application template applied to each discovered directory
   template:
     metadata:
-      name: 'pern-app-{{path.basename}}'
+      name: 'pern-app-{{.path.basename}}'
       namespace: argocd
       labels:
         app.kubernetes.io/name: pern-app
-        app.kubernetes.io/instance: '{{path.basename}}'
-        app.kubernetes.io/component: application
-        app.kubernetes.io/part-of: pern-application
-        app.kubernetes.io/managed-by: argocd
-        environment: '{{path.basename}}'
-        tier: '{{path.basename}}'
-        deployment.strategy: progressive-delivery
+        app.kubernetes.io/component: '{{.path.basename}}'
+        app.kubernetes.io/part-of: pern-stack
+        environment: '{{.path.basename}}'
       annotations:
-        notifications.argoproj.io/subscribe.on-deployed.slack: pern-deployments
-        notifications.argoproj.io/subscribe.on-sync-succeeded.slack: pern-deployments
-        notifications.argoproj.io/subscribe.on-sync-failed.slack: pern-alerts
-        notifications.argoproj.io/subscribe.on-health-degraded.slack: pern-alerts
-        app.argocd.argoproj.io/environment: '{{path.basename}}'
-        app.argocd.argoproj.io/repo: 'pern-gitops'
-        app.argocd.argoproj.io/path: '{{path}}'
-        deployment.argocd.argoproj.io/strategy: 'progressive'
-        deployment.argocd.argoproj.io/rollout-enabled: 'true'
+        argocd.argoproj.io/manifest-generate-paths: '{{.path.path}}'
+        notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployment-notifications
+        notifications.argoproj.io/subscribe.on-health-degraded.slack: alert-notifications
       finalizers:
       - resources-finalizer.argocd.argoproj.io
+      
     spec:
       project: pern-app
+      
       source:
         repoURL: https://github.com/mankinimbom/pern-gitops
         targetRevision: HEAD
-        path: '{{path}}'
+        path: '{{.path.path}}'
+        
       destination:
         server: https://kubernetes.default.svc
-        namespace: 'pern-app'
+        namespace: 'pern-app-{{.path.basename}}'
+      
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
           allowEmpty: false
+        
         syncOptions:
         - CreateNamespace=true
         - PrunePropagationPolicy=foreground
         - PruneLast=true
-        - ServerSideApply=true
-        - RespectIgnoreDifferences=true
         - ApplyOutOfSyncOnly=true
+        - RespectIgnoreDifferences=true
         - Replace=false
+        
         retry:
-          limit: 10
+          limit: 5
           backoff:
             duration: 5s
             factor: 2
-            maxDuration: 5m
+            maxDuration: 3m
+        
+        managedNamespaceMetadata:
+          labels:
+            environment: '{{.path.basename}}'
+            managed-by: argocd
+            app.kubernetes.io/part-of: pern-stack
+          annotations:
+            argocd.argoproj.io/tracking-id: 'pern-app-{{.path.basename}}'
+      
+      # Health checks and conditions
       ignoreDifferences:
       - group: argoproj.io
         kind: Rollout
         jsonPointers:
         - /spec/replicas
-        - /status
-        - /metadata/generation
       - group: autoscaling
         kind: HorizontalPodAutoscaler
         jsonPointers:
         - /spec/targetRef/apiVersion
-        - /status/currentReplicas
-        - /status/desiredReplicas
-      - group: apps
-        kind: StatefulSet
-        jsonPointers:
-        - /spec/replicas
-        - /status
-        - /spec/volumeClaimTemplates/*/metadata/creationTimestamp
-      - group: ''
-        kind: Service
-        jsonPointers:
-        - /spec/clusterIP
-        - /metadata/resourceVersion
-      - group: ''
-        kind: Secret
-        jsonPointers:
-        - /data
-        - /metadata/resourceVersion
-      - group: networking.k8s.io
-        kind: Ingress
-        jsonPointers:
-        - /status
-        - /metadata/generation
+      
+      # Information for better observability
       info:
-      - name: 'Environment'
-        value: '{{path.basename}}'
+      - name: Environment
+        value: '{{.path.basename}}'
+      - name: 'Git Revision'
+        value: '{{.revision}}'
       - name: 'Repository'
-        value: 'https://github.com/mankinimbom/pern-gitops'
-      - name: 'Path'
-        value: '{{path}}'
-      - name: 'Deployment Strategy'
-        value: 'Progressive Delivery with Argo Rollouts'
-      - name: 'Components'
-        value: 'Frontend (React), Backend (Node.js), Database (PostgreSQL), Cache (Redis)'
-      - name: 'Monitoring'
-        value: 'Prometheus metrics, Grafana dashboards'
-      - name: 'Security'
-        value: 'Network policies, RBAC, Pod security standards'
-      - name: 'Scaling'
-        value: 'Horizontal Pod Autoscaler based on CPU/Memory'
+        value: '{{.repoURL}}'
+      
+      # Progressive sync for production
       revisionHistoryLimit: 10
-
-  # No ApplicationSet-level strategy/syncPolicy for compatibility with older controllers

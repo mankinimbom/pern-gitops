@@ -3,176 +3,20 @@ kind: Application
 metadata:
   name: pern-app-root
   namespace: argocd
-  labels:
-    app.kubernetes.io/name: pern-app-root
-    app.kubernetes.io/component: root-application
-    app.kubernetes.io/part-of: pern-gitops
-    app.kubernetes.io/managed-by: argocd
-    deployment.type: app-of-apps
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-    app.argocd.argoproj.io/description: "Root application managing the entire PERN stack GitOps deployment"
-    
-    # Comprehensive notification setup for root application
-    notifications.argoproj.io/subscribe.on-deployed.slack: pern-ops
-    notifications.argoproj.io/subscribe.on-sync-succeeded.teams: pern-ops
-    notifications.argoproj.io/subscribe.on-sync-failed.slack: pern-alerts
-    notifications.argoproj.io/subscribe.on-health-degraded.slack: pern-alerts
-    
-    # Root application metadata
-    bootstrap.argocd.argoproj.io/managed-apps: "pern-app-production,pern-app-staging,pern-app-development"
-    bootstrap.argocd.argoproj.io/project: "pern-app"
-    bootstrap.argocd.argoproj.io/repository: "https://github.com/mankinimbom/pern-gitops"
-    
   finalizers:
     - resources-finalizer.argocd.argoproj.io
-
 spec:
-  project: default  # Root app uses default project to bootstrap everything
-  
+  project: default
   source:
     repoURL: https://github.com/mankinimbom/pern-gitops
     targetRevision: HEAD
     path: .
-    
-    # Directory inclusion for organized bootstrapping
-    directory:
-      recurse: false
-      include: |
-        kustomization.yaml
-        projects/
-        bootstrap/
-      exclude: |
-        apps/pern-app/
-        *.md
-        *.sh
-        .git*
-  
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
-  
-  # Robust sync policy for root application
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-      allowEmpty: false
-    
-    syncOptions:
-    # Essential sync options for bootstrap
-    - CreateNamespace=false  # ArgoCD namespace should already exist
-    - PrunePropagationPolicy=foreground
-    - PruneLast=true
-    - ServerSideApply=true
-    - RespectIgnoreDifferences=true
-    - ApplyOutOfSyncOnly=true
-    
-    # Retry policy for reliability
-    retry:
-      limit: 10
-      backoff:
-        duration: 10s
-        factor: 2
-        maxDuration: 10m
-  
-  # Ignore dynamic fields that shouldn't trigger sync
-  ignoreDifferences:
-  # ApplicationSet dynamic status
-  - group: argoproj.io
-    kind: ApplicationSet
-    jsonPointers:
-    - /status
-    - /metadata/generation
-  
-  # Application dynamic status and metadata
-  - group: argoproj.io
-    kind: Application
-    jsonPointers:
-    - /status
-    - /metadata/generation
-    - /spec/source/targetRevision
-    jqPathExpressions:
-    - '.status.sync.revision'
-  
-  # AppProject status changes
-  - group: argoproj.io
-    kind: AppProject
-    jsonPointers:
-    - /status
-    - /metadata/generation
-  
-  # Application health and sync information
-  info:
-  - name: 'Bootstrap Type'
-    value: 'App-of-Apps Pattern'
-  - name: 'Repository'
-    value: 'https://github.com/mankinimbom/pern-gitops'
-  - name: 'Managed Applications'
-    value: 'PERN Stack multi-environment deployment'
-  - name: 'Components Bootstrapped'
-    value: 'AppProject, ApplicationSet, Analysis Templates'
-  - name: 'Environments'
-    value: 'Production, Staging, Development'
-  - name: 'Architecture'
-    value: 'Frontend (React/Nginx), Backend (Node.js), Database (PostgreSQL), Cache (Redis)'
-  - name: 'Progressive Delivery'
-    value: 'Argo Rollouts with canary deployments'
-  - name: 'Security'
-    value: 'RBAC, Network Policies, Pod Security Standards'
-  - name: 'Monitoring'
-    value: 'Prometheus, ServiceMonitors, AlertManager integration'
-  - name: 'Auto-scaling'
-    value: 'HPA based on CPU/Memory utilization'
-  
-  # Revision history for rollback capability
-  revisionHistoryLimit: 20
-
----
-# Health check for root application dependencies
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: pern-app-health-check
-  namespace: argocd
-  labels:
-    app.kubernetes.io/name: pern-app-health-check
-    app.kubernetes.io/component: health-monitor
-    app.kubernetes.io/part-of: pern-gitops
-    app.kubernetes.io/managed-by: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "10"  # Deploy after main applications
-    app.argocd.argoproj.io/description: "Health monitoring and validation for PERN stack deployment"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-
-spec:
-  project: pern-app
-  
-  source:
-    repoURL: https://github.com/mankinimbom/pern-gitops
-    targetRevision: HEAD
-    path: monitoring  # Assumes monitoring configs exist
-    
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
-  
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
     - CreateNamespace=true
-    - ServerSideApply=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        maxDuration: 2m
-  
-  info:
-  - name: 'Purpose'
-    value: 'Health monitoring and alerting for PERN stack'
-  - name: 'Components'
-    value: 'ServiceMonitors, PrometheusRules, AlertManager configuration'

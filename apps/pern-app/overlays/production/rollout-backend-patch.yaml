@@ -1,46 +1,87 @@
-# Backend Rollout Production Configuration
-- op: replace
-  path: /spec/replicas
-  value: 5
-- op: replace
-  path: /spec/strategy/canary/steps
-  value:
-  - setWeight: 5
-  - pause: {duration: 300s}
-  - analysis:
-      templates:
-      - templateName: success-rate-analysis
-      - templateName: database-performance-analysis
-      args:
-      - name: service-name
-        value: backend-canary-service
-      - name: namespace
-        value: pern-app
-  - setWeight: 10
-  - pause: {duration: 600s}
-  - setWeight: 25
-  - pause: {duration: 900s}
-  - analysis:
-      templates:
-      - templateName: success-rate-analysis
-      - templateName: database-performance-analysis
-      - templateName: comprehensive-health-analysis
-      args:
-      - name: service-name
-        value: backend-canary-service
-      - name: namespace
-        value: pern-app
-  - setWeight: 50
-  - pause: {duration: 1200s}
-  - setWeight: 75
-  - pause: {duration: 1800s}
-  - analysis:
-      templates:
-      - templateName: success-rate-analysis
-      - templateName: database-performance-analysis
-      - templateName: comprehensive-health-analysis
-      args:
-      - name: service-name
-        value: backend-canary-service
-      - name: namespace
-        value: pern-app
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: backend
+  namespace: pern-app-production
+spec:
+  strategy:
+    canary:
+      steps:
+      # Initial canary deployment
+      - setWeight: 5
+      - pause: 
+          duration: 1m
+      
+      # Automated analysis phase 1
+      - analysis:
+          templates:
+          - templateName: backend-success-rate
+          args:
+          - name: service-name
+            value: backend-canary-service
+          - name: prometheus-server
+            value: http://prometheus-server.monitoring.svc.cluster.local:80
+      
+      - setWeight: 15
+      - pause: 
+          duration: 5m
+      
+      # Comprehensive analysis phase 2
+      - analysis:
+          templates:
+          - templateName: backend-success-rate
+          - templateName: backend-response-time
+          - templateName: backend-cpu-memory
+          args:
+          - name: service-name
+            value: backend-canary-service
+      
+      - setWeight: 30
+      - pause: 
+          duration: 10m
+      
+      # Manual approval gate for production
+      - analysis:
+          templates:
+          - templateName: manual-approval-production
+          args:
+          - name: environment
+            value: production
+          - name: release-version
+            value: "{{.Values.image.tag}}"
+          - name: approver-group
+            value: platform-team
+      
+      # Smoke tests after approval
+      - analysis:
+          templates:
+          - templateName: smoke-tests-production
+          args:
+          - name: service-url
+            value: https://api.pern-app.ankinimbom.com
+          - name: environment
+            value: production
+      
+      - setWeight: 60
+      - pause: 
+          duration: 15m
+      
+      # Final comprehensive analysis
+      - analysis:
+          templates:
+          - templateName: backend-success-rate
+          - templateName: backend-response-time
+          - templateName: backend-error-rate
+          args:
+          - name: service-name
+            value: backend-canary-service
+      
+      - setWeight: 100
+      
+      # Enhanced abort conditions for production
+      abort:
+        failureLimit: 2
+        
+      # Extended scale down delays for production safety
+      scaleDownDelaySeconds: 600
+      abortScaleDownDelaySeconds: 1800
