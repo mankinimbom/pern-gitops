@@ -69,10 +69,11 @@ deploy_argocd_ha() {
     kubectl create namespace "$ARGOCD_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
     
     # Apply ArgoCD HA configuration
-    if [[ -f "$SCRIPT_DIR/k8s/argocd/argocd-ha.yaml" ]]; then
-        kubectl apply -f "$SCRIPT_DIR/k8s/argocd/argocd-ha.yaml"
+    local argocd_ha_file="/home/rancher/pern/pern-app/k8s/argocd/argocd-ha.yaml"
+    if [[ -f "$argocd_ha_file" ]]; then
+        kubectl apply -f "$argocd_ha_file"
     else
-        log_error "ArgoCD HA configuration file not found"
+        log_error "ArgoCD HA configuration file not found at: $argocd_ha_file"
         exit 1
     fi
     
