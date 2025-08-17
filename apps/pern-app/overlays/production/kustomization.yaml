@@ -12,6 +12,6 @@ patchesStrategicMerge:
 
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: 726a40dcd8ef78f5dbe98ac055e2ef0105da66fd
+    newTag: 5f20d763fed9c7baaeaa900fc831d9b9a4864a36
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: 726a40dcd8ef78f5dbe98ac055e2ef0105da66fd
+    newTag: 5f20d763fed9c7baaeaa900fc831d9b9a4864a36
