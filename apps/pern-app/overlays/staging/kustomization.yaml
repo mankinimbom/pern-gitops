@@ -8,6 +8,6 @@ resources:
 
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: latest
+    newTag: cdf5ce5c2274d574982b17db98d5d366c9ba16fb
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: latest
+    newTag: cdf5ce5c2274d574982b17db98d5d366c9ba16fb
