@@ -1,0 +1,80 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Production monitoring and infrastructure project
+  
+  # Source repositories
+  sourceRepos:
+  - 'https://github.com/mankinimbom/pern-gitops'
+  - 'https://prometheus-community.github.io/helm-charts'
+  - 'https://grafana.github.io/helm-charts'
+  - '*'
+
+  # Destination clusters and namespaces
+  destinations:
+  - namespace: 'monitoring'
+    server: 'https://kubernetes.default.svc'
+  - namespace: 'kube-system'
+    server: 'https://kubernetes.default.svc'
+  - namespace: 'default'
+    server: 'https://kubernetes.default.svc'
+  - namespace: '*'
+    server: 'https://kubernetes.default.svc'
+
+  # Cluster-scoped resources allowed to be managed
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  - group: ''
+    kind: Node
+  - group: ''
+    kind: ClusterRole
+  - group: ''
+    kind: ClusterRoleBinding
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRole
+  - group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding
+  - group: apiextensions.k8s.io
+    kind: CustomResourceDefinition
+  - group: admissionregistration.k8s.io
+    kind: MutatingWebhookConfiguration
+  - group: admissionregistration.k8s.io
+    kind: ValidatingWebhookConfiguration
+  - group: monitoring.coreos.com
+    kind: '*'
+  - group: '*'
+    kind: '*'
+
+  # Orphaned resource monitoring
+  orphanedResources:
+    warn: true
+    ignore:
+    - group: ''
+      kind: Secret
+      name: '*-token-*'
+
+  # Sync windows
+  syncWindows:
+  - kind: allow
+    schedule: '* * * * *'
+    duration: 24h
+    applications:
+    - '*'
+    manualSync: true
+
+  # Security and RBAC policies
+  roles:
+  - name: admin
+    description: Admin role for prod project
+    policies:
+    - p, proj:prod:admin, applications, *, prod/*, allow
+    - p, proj:prod:admin, repositories, *, *, allow
+    - p, proj:prod:admin, clusters, *, *, allow
+    groups:
+    - argocd-admins
