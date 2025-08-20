@@ -14,7 +14,6 @@ resources:
   - networkpolicies.yaml
   - poddisruptionbudgets.yaml
   - servicemonitor.yaml
-  - storageclass-longhorn-wffc-db.yaml
 images:
   - name: ghcr.io/mankinimbom/pern-backend
     newTag: "2c72736"
