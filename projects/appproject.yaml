@@ -26,6 +26,14 @@ spec:
   clusterResourceWhitelist:
   - group: ''
     kind: Namespace
+  - group: storage.k8s.io
+    kind: StorageClass
+  - group: argoproj.io
+    kind: AppProject
+  - group: argoproj.io
+    kind: Application
+  - group: argoproj.io
+    kind: ApplicationSet
   - group: networking.k8s.io
     kind: Ingress
     
@@ -51,6 +59,14 @@ spec:
     kind: AnalysisTemplate
   - group: argoproj.io
     kind: AnalysisRun
+  - group: argoproj.io
+    kind: Application
+  - group: argoproj.io
+    kind: ApplicationSet
+  - group: argoproj.io
+    kind: AppProject
+  - group: argoproj.io
+    kind: Application
   - group: networking.k8s.io
     kind: Ingress
   - group: networking.k8s.io
