@@ -48,12 +48,12 @@ spec:
         version: v1
     spec:
       serviceAccountName: backend-sa
+      imagePullSecrets:
+      - name: ghcr-creds
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 2000
-  imagePullSecrets:
-  - name: ghcr-creds
       containers:
       - name: backend
         image: ghcr.io/mankinimbom/pern-backend:main-a3e9cd3
