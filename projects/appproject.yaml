@@ -65,8 +65,6 @@ spec:
     kind: ApplicationSet
   - group: argoproj.io
     kind: AppProject
-  - group: argoproj.io
-    kind: Application
   - group: networking.k8s.io
     kind: Ingress
   - group: networking.k8s.io
