@@ -9,9 +9,9 @@ patchesStrategicMerge:
 # Use immutable, SHA-based image tags for production
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: bc19b25
+    newTag: ""
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: bc19b25
+    newTag: ""
 # Common labels for all production resources
 labels:
   - pairs:
