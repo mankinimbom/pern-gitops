@@ -8,6 +8,6 @@ patchesStrategicMerge:
   - resource-patch.yaml
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: "52b970f"
+    newTag: "2c72736"
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: "52b970f"
+    newTag: "2c72736"
