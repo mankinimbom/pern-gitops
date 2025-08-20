@@ -1,17 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: pern-app-staging
-
 resources:
   - ../../base
-
 patchesStrategicMerge:
   - replica-patch.yaml
   - resource-patch.yaml
-
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: 13a658b0984e49f12f37ebb87f2116ef7e56bd7d
+    newTag: 365b915
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: 13a658b0984e49f12f37ebb87f2116ef7e56bd7d
+    newTag: 365b915
