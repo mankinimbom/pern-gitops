@@ -4,6 +4,7 @@ kind: Kustomization
 # Each overlay will create its own namespace automatically
 resources:
   - secrets.yaml
+  - secrets/ghcr-secrets.yaml
   - rbac.yaml
   - backend.yaml
   - frontend.yaml
