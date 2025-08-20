@@ -59,7 +59,6 @@ check_file "bootstrap/root-app.yaml" "Root Application"
 check_file "bootstrap/declarative-setup.sh" "Declarative Setup Script"
 check_file "projects/appproject.yaml" "ArgoCD Project"
 check_file "projects/applicationset.yaml" "ApplicationSet"
-check_file "projects/repository-secret.yaml" "Repository Secret Template"
 echo
 
 echo "📋 2. Checking Application Structure"
@@ -99,7 +98,6 @@ echo
 echo "📋 6. Checking Secret Configuration"
 echo "----------------------------------"
 check_content "apps/pern-app/base/secrets/ghcr-secrets.yaml" "kubernetes.io/dockerconfigjson" "GHCR Secret Type"
-check_content "projects/repository-secret.yaml" "argocd.argoproj.io/secret-type: repository" "Repository Secret Label"
 check_content "apps/pern-app/base/backend.yaml" "imagePullSecrets" "Backend ImagePullSecrets"
 check_content "apps/pern-app/base/frontend.yaml" "imagePullSecrets" "Frontend ImagePullSecrets"
 echo
@@ -123,7 +121,6 @@ echo
 echo "📋 9. Checking Template Variables"
 echo "--------------------------------"
 check_warning "apps/pern-app/base/secrets/ghcr-secrets.yaml" "\\${GITHUB_PAT}" "Template Variables in GHCR Secret"
-check_warning "projects/repository-secret.yaml" "\\${GITHUB_PAT}" "Template Variables in Repository Secret"
 echo
 
 echo "📋 10. Checking Documentation"

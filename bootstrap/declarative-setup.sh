@@ -56,7 +56,6 @@ if [ "$SKIP_SECRETS" = false ]; then
     envsubst '${GITHUB_PAT} ${GITHUB_AUTH_B64}' < "$REPO_ROOT/apps/pern-app/base/secrets/ghcr-secrets.yaml" > /tmp/processed-secrets/ghcr-secrets.yaml
     
     # Process repository secret
-    envsubst '${GITHUB_PAT}' < "$REPO_ROOT/projects/repository-secret.yaml" > /tmp/processed-secrets/repository-secret.yaml
     
     echo "✅ Secret templates processed"
 else
@@ -67,7 +66,6 @@ echo
 # 1. Apply ArgoCD Repository Secret first (highest priority)
 if [ "$SKIP_SECRETS" = false ]; then
     echo "🔐 1. Applying ArgoCD repository secret..."
-    kubectl apply -f /tmp/processed-secrets/repository-secret.yaml
     echo "✅ ArgoCD repository secret applied"
 else
     echo "⏭️  1. Skipping repository secret (manual setup required)"
@@ -83,7 +81,6 @@ echo
 # 3. Apply all other ArgoCD project resources (ApplicationSet, AnalysisTemplates, etc.)
 echo "📋 3. Applying ArgoCD project resources..."
 for file in "$REPO_ROOT/projects"/*.yaml; do
-    if [ "$(basename "$file")" != "appproject.yaml" ] && [ "$(basename "$file")" != "repository-secret.yaml" ]; then
         echo "   Applying $(basename "$file")..."
         kubectl apply -f "$file"
     fi
