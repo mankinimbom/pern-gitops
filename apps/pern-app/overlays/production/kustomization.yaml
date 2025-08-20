@@ -6,6 +6,12 @@ resources:
 patchesStrategicMerge:
   - replica-patch.yaml
   - resource-patch.yaml
+patchesJson6902:
+  - target:
+      version: v1
+      kind: StatefulSet
+      name: postgresql
+    path: pgsql-sc-jsonpatch.yaml
 # Use immutable, SHA-based image tags for production
 images:
   - name: ghcr.io/mankinimbom/pern-backend
