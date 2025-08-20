@@ -1,0 +1,26 @@
+# NAMESPACE DOCUMENTATION
+# 
+# This file is for documentation purposes only and is NOT included in kustomization.yaml
+#
+# Actual namespaces are managed by overlays:
+# - Staging environment: pern-app-staging (apps/pern-app/overlays/staging/)
+# - Production environment: pern-app-production (apps/pern-app/overlays/production/)
+#
+# Each overlay's kustomization.yaml file contains:
+#   namespace: pern-app-staging    (for staging)
+#   namespace: pern-app-production (for production)
+#
+# This ensures proper environment isolation and follows GitOps best practices.
+
+# Template namespace structure (for reference only):
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: pern-app-{environment}
+#   labels:
+#     app.kubernetes.io/name: pern-app
+#     app.kubernetes.io/part-of: pern-stack
+#     app.kubernetes.io/managed-by: argocd
+#     environment: {staging|production}
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "-1"

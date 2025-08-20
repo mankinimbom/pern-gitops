@@ -15,5 +15,7 @@ resources:
   - poddisruptionbudgets.yaml
   - servicemonitor.yaml
 images:
-  - newTag: 365b915
-  - newTag: 365b915
+  - name: ghcr.io/mankinimbom/pern-backend
+    newTag: 365b915
+  - name: ghcr.io/mankinimbom/pern-frontend
+    newTag: 365b915

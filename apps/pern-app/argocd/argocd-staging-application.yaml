@@ -4,18 +4,8 @@ metadata:
   name: pern-app-staging
   namespace: argocd
   annotations:
-    # ArgoCD Image Updater annotations for automatic image updates
-    argocd-image-updater.argoproj.io/image-list: |
-      backend=ghcr.io/mankinimbom/pern-backend:^v.*,
-      frontend=ghcr.io/mankinimbom/pern-frontend:^v.*
-    argocd-image-updater.argoproj.io/backend.update-strategy: semver
-    argocd-image-updater.argoproj.io/frontend.update-strategy: semver
-    argocd-image-updater.argoproj.io/backend.allow-tags: regexp:^v.*
-    argocd-image-updater.argoproj.io/frontend.allow-tags: regexp:^v.*
-    argocd-image-updater.argoproj.io/write-back-method: git
-    argocd-image-updater.argoproj.io/git-branch: main
-    argocd-image-updater.argoproj.io/backend.force-update: "true"
-    argocd-image-updater.argoproj.io/frontend.force-update: "true"
+    # Image updates handled by GitHub Actions CI/CD workflow
+    gitops.argoproj.io/image-updater: disabled
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
