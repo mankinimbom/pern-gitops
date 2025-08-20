@@ -7,6 +7,7 @@ spec:
     spec:
       containers:
       - name: backend
+        image: ghcr.io/mankinimbom/pern-backend:main-a3e9cd3
         resources:
           requests:
             memory: "256Mi"
@@ -24,6 +25,7 @@ spec:
     spec:
       containers:
       - name: frontend
+        image: ghcr.io/mankinimbom/pern-frontend:main-a3e9cd3
         resources:
           requests:
             memory: "128Mi"
