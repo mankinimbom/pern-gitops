@@ -45,7 +45,7 @@ spec:
       - name: ghcr-creds
       containers:
       - name: frontend
-        image: ghcr.io/mankinimbom/pern-frontend:main-a3e9cd3
+        image: ghcr.io/mankinimbom/pern-frontend:2c72736
         ports:
         - containerPort: 80
         livenessProbe:

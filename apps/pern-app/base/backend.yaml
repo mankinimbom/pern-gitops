@@ -56,7 +56,7 @@ spec:
         fsGroup: 2000
       containers:
       - name: backend
-        image: ghcr.io/mankinimbom/pern-backend:main-a3e9cd3
+        image: ghcr.io/mankinimbom/pern-backend:2c72736
         ports:
         - containerPort: 3001
           name: http
