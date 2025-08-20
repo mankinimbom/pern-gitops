@@ -17,12 +17,6 @@ resources:
   - storageclass-longhorn-wffc-db.yaml
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-<<<<<<< HEAD
-  newTag: "52b970f"
+    newTag: "52b970f"
   - name: ghcr.io/mankinimbom/pern-frontend
-  newTag: "52b970f"
-=======
-    newTag: "2c72736"
-  - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: "2c72736"
->>>>>>> 40875fa868679315ba29b655a654888a0677dd51
+    newTag: "52b970f"
