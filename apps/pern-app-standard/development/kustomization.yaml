@@ -2,17 +2,25 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - https://github.com/mankinimbom/pern-app//k8s-standard/overlays/development?ref=main
+  - ../base
+
+namePrefix: dev-
+
+labels:
+  - includeSelectors: true
+    pairs:
+      environment: development
+      app.kubernetes.io/instance: pern-app-standard-dev
+
+namespace: pern-standard
+
+patchesStrategicMerge:
+  - env-patch.yaml
 
 images:
   - name: ghcr.io/mankinimbom/pern-backend-standard
     newName: ghcr.io/mankinimbom/pern-backend-standard
-    newTag: "main-b2a709a"
+    newTag: "main-107bd9b"
   - name: ghcr.io/mankinimbom/pern-frontend-standard
     newName: ghcr.io/mankinimbom/pern-frontend-standard
-    newTag: "main-b2a709a"
-
-commonLabels:
-  deployment-type: standard-k8s
-  managed-by: argocd
-  git-sha: "main"
+    newTag: "main-107bd9b"
