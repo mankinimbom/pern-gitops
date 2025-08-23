@@ -10,13 +10,11 @@ resources:
   - frontend-deployment.yaml
   - frontend-service.yaml
   - postgresql-deployment.yaml
-  - postgresql-resources.yaml
+  - postgresql-service.yaml
   - redis-deployment.yaml
-  - redis-resources.yaml
+  - redis-service.yaml
   - ingress.yaml
 
-labels:
-  - includeSelectors: true
-    pairs:
-      app.kubernetes.io/part-of: pern-app-standard
-      deployment-type: standard-k8s
+commonLabels:
+  deployment-type: standard-k8s
+  app.kubernetes.io/part-of: pern-stack-standard

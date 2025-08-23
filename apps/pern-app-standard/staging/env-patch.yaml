@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-deployment
+  name: frontend
 spec:
   template:
     spec:
@@ -9,14 +9,14 @@ spec:
       - name: frontend
         env:
         - name: BACKEND_SERVICE
-          value: "staging-backend-service"
+          value: "staging-backend"
         - name: REACT_APP_API_URL
-          value: "http://staging-backend-service:3000"
+          value: "http://staging-backend:3000"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: backend
 spec:
   template:
     spec:
@@ -24,6 +24,6 @@ spec:
       - name: backend
         env:
         - name: DATABASE_URL
-          value: "postgresql://pernuser:pernpassword@staging-postgresql-service:5432/perndb"
+          value: "postgresql://pernuser:pernpassword@staging-postgresql:5432/perndb"
         - name: REDIS_URL
-          value: "redis://staging-redis-service:6379"
+          value: "redis://staging-redis:6379"

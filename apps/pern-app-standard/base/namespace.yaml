@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: pern-standard
   labels:
+    name: pern-standard
     app.kubernetes.io/name: pern-standard
-    app.kubernetes.io/part-of: pern-app-standard
+    app.kubernetes.io/part-of: pern-stack
     deployment-type: standard-k8s
