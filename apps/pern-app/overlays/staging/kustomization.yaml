@@ -14,6 +14,6 @@ patchesJson6902:
     path: pgsql-sc-jsonpatch.yaml
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: "c4af334"
+    newTag: "9160d4b"
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: "c4af334"
+    newTag: "9160d4b"
