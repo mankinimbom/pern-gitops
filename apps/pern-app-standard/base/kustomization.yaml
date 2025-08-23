@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pern-app-standard
+
+resources:
+  - namespace.yaml
+  - hostpath-storage.yaml
+  - backend-deployment.yaml
+  - backend-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - postgresql-deployment.yaml
+  - postgresql-resources.yaml
+  - redis-deployment.yaml
+  - redis-resources.yaml
+  - ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: pern-app-standard
+  - redis-deployment.yaml
+  - redis-resources.yaml
+  - ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: pern-stack-standard
+  deployment-type: standard-k8s
