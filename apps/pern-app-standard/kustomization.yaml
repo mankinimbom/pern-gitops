@@ -6,12 +6,12 @@ resources:
   - https://github.com/mankinimbom/pern-app//k8s-standard/overlays/staging
 
 images:
-  - name: ghcr.io/mankinimbom/pern-backend
-    newName: ghcr.io/mankinimbom/pern-backend
-    newTag: "standard-latest"
-  - name: ghcr.io/mankinimbom/pern-frontend  
-    newName: ghcr.io/mankinimbom/pern-frontend
-    newTag: "standard-latest"
+  - name: ghcr.io/mankinimbom/pern-backend-standard
+    newName: ghcr.io/mankinimbom/pern-backend-standard
+    newTag: "latest"
+  - name: ghcr.io/mankinimbom/pern-frontend-standard  
+    newName: ghcr.io/mankinimbom/pern-frontend-standard
+    newTag: "latest"
 
 commonLabels:
   deployment-type: standard-k8s
