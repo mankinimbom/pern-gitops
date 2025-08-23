@@ -7,10 +7,10 @@ resources:
 images:
   - name: ghcr.io/mankinimbom/pern-backend-standard
     newName: ghcr.io/mankinimbom/pern-backend-standard
-    newTag: "main"
+    newTag: "main-b2a709a"
   - name: ghcr.io/mankinimbom/pern-frontend-standard
     newName: ghcr.io/mankinimbom/pern-frontend-standard
-    newTag: "main"
+    newTag: "main-b2a709a"
 
 commonLabels:
   deployment-type: standard-k8s
