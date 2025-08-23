@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - https://github.com/mankinimbom/pern-app//k8s-standard/overlays/staging?ref=main
+
+images:
+  - name: ghcr.io/mankinimbom/pern-backend-standard
+    newName: ghcr.io/mankinimbom/pern-backend-standard
+    newTag: "main"
+  - name: ghcr.io/mankinimbom/pern-frontend-standard
+    newName: ghcr.io/mankinimbom/pern-frontend-standard
+    newTag: "main"
+
+commonLabels:
+  deployment-type: standard-k8s
+  managed-by: argocd
+  git-sha: "main"
