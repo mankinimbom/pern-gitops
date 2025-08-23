@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ArgoCD Projects Directory - Core GitOps Components
+# This file explicitly defines which resources to include,
+# preventing ArgoCD from applying all YAML files in the directory
+
+resources:
+  - appproject.yaml
+  - prod-project.yaml
+  - applicationset.yaml
+  - analysis-template.yaml
+  - frontend-analysis-template.yaml
+  - manual-approval-template.yaml
+
+# Note: repository-secret.yaml is intentionally excluded
+# Repository authentication is managed imperatively to prevent
+# template variable conflicts with GitOps automation
