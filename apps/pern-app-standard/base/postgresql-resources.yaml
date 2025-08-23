@@ -30,7 +30,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: hostpath-storage
+  storageClassName: local-path
 ---
 apiVersion: v1
 kind: Secret

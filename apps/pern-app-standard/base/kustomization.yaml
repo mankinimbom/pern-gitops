@@ -5,7 +5,6 @@ namespace: pern-app-standard
 
 resources:
   - namespace.yaml
-  - hostpath-storage.yaml
   - backend-deployment.yaml
   - backend-service.yaml
   - frontend-deployment.yaml
