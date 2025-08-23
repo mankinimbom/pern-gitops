@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: pern-app-standard
+namespace: pern-standard
 
 resources:
   - namespace.yaml
@@ -15,12 +15,8 @@ resources:
   - redis-resources.yaml
   - ingress.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: pern-app-standard
-  - redis-deployment.yaml
-  - redis-resources.yaml
-  - ingress.yaml
-
-commonLabels:
-  app.kubernetes.io/part-of: pern-stack-standard
-  deployment-type: standard-k8s
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/part-of: pern-app-standard
+      deployment-type: standard-k8s
