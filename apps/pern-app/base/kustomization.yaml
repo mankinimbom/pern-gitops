@@ -18,6 +18,6 @@ resources:
   - servicemonitor.yaml
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: "2c72736"
+    newTag: "632c6d4"
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: "2c72736"
+    newTag: "632c6d4"
