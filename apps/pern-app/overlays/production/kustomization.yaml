@@ -15,9 +15,9 @@ patchesJson6902:
 # Use immutable, SHA-based image tags for production
 images:
   - name: ghcr.io/mankinimbom/pern-backend
-    newTag: "2c72736"
+    newTag: ""
   - name: ghcr.io/mankinimbom/pern-frontend
-    newTag: "2c72736"
+    newTag: ""
 # Common labels for all production resources
 labels:
   - pairs:
