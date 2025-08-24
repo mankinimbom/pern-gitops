@@ -19,7 +19,7 @@ spec:
     path: apps/pern-app-standard/development
   destination:
     server: https://kubernetes.default.svc
-    namespace: pern-standard
+    namespace: pern-standard-dev
   syncPolicy:
     automated:
       prune: true
@@ -58,7 +58,7 @@ spec:
     path: apps/pern-app-standard/staging
   destination:
     server: https://kubernetes.default.svc
-    namespace: pern-standard
+    namespace: pern-standard-staging
   syncPolicy:
     automated:
       prune: true

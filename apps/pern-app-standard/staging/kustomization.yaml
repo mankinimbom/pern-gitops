@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - ../base
+  - namespace-patch.yaml
 
 namePrefix: staging-
 
@@ -12,7 +13,7 @@ labels:
       environment: staging
       app.kubernetes.io/instance: pern-app-standard-staging
 
-namespace: pern-standard
+namespace: pern-standard-staging
 
 patchesStrategicMerge:
   - env-patch.yaml

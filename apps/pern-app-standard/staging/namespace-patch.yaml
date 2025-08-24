@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pern-standard-staging
+  labels:
+    app.kubernetes.io/name: pern-standard-staging
+    app.kubernetes.io/part-of: pern-app-standard
+    deployment-type: standard-k8s
+    environment: staging

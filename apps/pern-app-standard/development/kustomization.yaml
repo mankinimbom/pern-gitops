@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - ../base
+  - namespace-patch.yaml
 
 namePrefix: dev-
 
@@ -12,7 +13,7 @@ labels:
       environment: development
       app.kubernetes.io/instance: pern-app-standard-dev
 
-namespace: pern-standard
+namespace: pern-standard-dev
 
 patchesStrategicMerge:
   - env-patch.yaml
