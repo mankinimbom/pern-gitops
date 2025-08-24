@@ -18,6 +18,7 @@ namespace: pern-standard-staging
 patches:
   - path: env-patch.yaml
   - path: resource-patch.yaml
+  - path: replica-patch.yaml
 
 images:
   - name: ghcr.io/mankinimbom/pern-backend-standard
