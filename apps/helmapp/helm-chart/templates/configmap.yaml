@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "helmapp.fullname" . }}-config
+  labels:
+    {{- include "helmapp.labels" . | nindent 4 }}
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>{{ .Values.app.name | upper }} - Helm Demo</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 800px; 
+                margin: 0 auto; 
+                text-align: center;
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+            }
+            .info { 
+                background: rgba(255,255,255,0.2); 
+                padding: 20px; 
+                border-radius: 5px; 
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 {{ .Values.app.name | upper }} - Helm Application</h1>
+            <p>This is a sample Helm-based application deployed via ArgoCD</p>
+            
+            <div class="info">
+                <h3>📋 Application Info</h3>
+                <p><strong>Name:</strong> {{ .Values.app.name }}</p>
+                <p><strong>Environment:</strong> {{ .Values.app.environment }}</p>
+                <p><strong>Version:</strong> {{ .Values.app.version }}</p>
+                <p><strong>Chart Version:</strong> {{ .Chart.Version }}</p>
+                <p><strong>Replicas:</strong> {{ .Values.replicaCount }}</p>
+            </div>
+
+            <div class="info">
+                <h3>⚙️ Deployment Details</h3>
+                <p><strong>Image:</strong> {{ .Values.image.repository }}:{{ .Values.image.tag }}</p>
+                <p><strong>Service Type:</strong> {{ .Values.service.type }}</p>
+                <p><strong>Port:</strong> {{ .Values.service.port }}</p>
+            </div>
+
+            <div class="info">
+                <h3>🎯 ArgoCD + Helm Demo</h3>
+                <p>This application demonstrates:</p>
+                <ul style="text-align: left;">
+                    <li>Helm chart templating with values</li>
+                    <li>ConfigMap integration</li>
+                    <li>ArgoCD GitOps deployment</li>
+                    <li>Resource management</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>
