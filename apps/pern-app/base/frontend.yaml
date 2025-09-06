@@ -41,6 +41,8 @@ spec:
         managed-by: argocd
         version: v1
     spec:
+      imagePullSecrets:
+      - name: ghcr-creds
       containers:
       - name: frontend
         image: ghcr.io/mankinimbom/pern-frontend:2c72736

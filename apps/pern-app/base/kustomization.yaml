@@ -4,8 +4,7 @@ kind: Kustomization
 # Each overlay will create its own namespace automatically
 resources:
   - secrets.yaml
-  # Excluding GHCR secrets from ArgoCD management to avoid template variable issues
-  # - secrets/ghcr-secrets.yaml
+  - secrets/ghcr-secrets.yaml
   - rbac.yaml
   - backend.yaml
   - frontend.yaml
