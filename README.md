@@ -2,6 +2,26 @@
 
 This repository now supports **fully declarative setup** instead of ad-hoc kubectl commands!
 
+## 🔧 Jenkins CI/CD Pipeline
+
+**NEW!** Automated CI/CD pipeline with Jenkins is now available! 
+
+```bash
+cd jenkins
+./setup.sh
+```
+
+📖 **[Complete Jenkins Setup Guide →](docs/JENKINS-SETUP.md)**
+
+Features:
+- ✅ Automated Docker image builds
+- ✅ Security scanning with Trivy
+- ✅ Automatic GHCR pushes
+- ✅ GitOps manifest updates
+- ✅ ArgoCD integration
+
+---
+
 ## 🎯 Quick Start
 
 ```bash
@@ -129,6 +149,7 @@ Future changes can be made declaratively by:
 
 ## 📚 Documentation
 
+- **Jenkins CI/CD Setup**: [docs/JENKINS-SETUP.md](docs/JENKINS-SETUP.md) 🆕
 - **Complete Fix Documentation**: [docs/declarative-fixes.md](docs/declarative-fixes.md)
 - **Secret Management Guide**: [bootstrap/secrets/README.md](bootstrap/secrets/README.md)
 - **Production GitOps Guide**: [docs/production-gitops-implementation.md](docs/production-gitops-implementation.md)

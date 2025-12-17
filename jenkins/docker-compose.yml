@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: pern-jenkins
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jobs:/var/jenkins_home/jobs
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JENKINS_OPTS=--prefix=/jenkins
+    networks:
+      - jenkins-network
+
+  # Docker-in-Docker for isolated builds (alternative to mounting docker.sock)
+  docker-dind:
+    image: docker:24-dind
+    container_name: pern-jenkins-docker
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - jenkins_docker_certs:/certs/client
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - jenkins-network
+    command: --storage-driver=overlay2
+
+volumes:
+  jenkins_home:
+    driver: local
+  jenkins_docker_certs:
+    driver: local
+
+networks:
+  jenkins-network:
+    driver: bridge

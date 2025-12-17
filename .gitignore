@@ -95,3 +95,8 @@ kustomization-build/
 # Local development overrides
 local/
 dev-overrides/
+
+# Jenkins
+jenkins/.env
+jenkins/jobs/
+jenkins_home/
