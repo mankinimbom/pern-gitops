@@ -27,7 +27,6 @@ FROM nginx:alpine
 
 # Copy built assets from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
-COPY --from=builder /app/build /usr/share/nginx/html
 
 # Create non-root user for nginx
 RUN addgroup -g 1000 appuser && \

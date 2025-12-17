@@ -16,7 +16,6 @@ services:
       - ./jobs:/var/jenkins_home/jobs
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
-      - JENKINS_OPTS=--prefix=/jenkins
     networks:
       - jenkins-network
 
