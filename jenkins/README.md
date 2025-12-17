@@ -128,11 +128,37 @@ The Jenkins pipeline includes the following stages:
 
 ## 🔐 Security Best Practices
 
+### Credentials & Secrets
 - ✅ Never commit credentials to Git
 - ✅ Use Jenkins Credentials Store for all secrets
-- ✅ Enable security scanning with Trivy
 - ✅ Use separate credentials for different environments
 - ✅ Rotate GitHub tokens regularly
+- ✅ Use minimal required permissions for tokens
+
+### Docker Socket Security
+⚠️ **Important**: The default setup mounts the Docker socket for building images. This has security implications:
+
+**Risks:**
+- Containers can access the Docker daemon
+- Effectively provides root-level access to the host
+- Suitable for **development/testing only**
+
+**Production Alternatives:**
+1. **Docker-in-Docker (DinD)**: Use the commented-out `docker-dind` service in `docker-compose.yml`
+2. **Kaniko**: Build images without Docker daemon access
+3. **Dedicated Build Agents**: Run on isolated VMs/nodes
+4. **Kubernetes-based Jenkins**: Use proper RBAC and pod security policies
+
+**To Enable Docker-in-Docker:**
+```yaml
+# In docker-compose.yml:
+# 1. Comment out the docker.sock mount
+# 2. Uncomment the docker-dind service
+# 3. Set DOCKER_HOST=tcp://docker-dind:2376 in Jenkins
+```
+
+### Image Scanning
+- ✅ Enable security scanning with Trivy
 - ✅ Use minimal required permissions for tokens
 
 ## 📁 Expected Repository Structure

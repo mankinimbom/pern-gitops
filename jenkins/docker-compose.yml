@@ -1,16 +1,31 @@
 version: '3.8'
 
+# ⚠️ SECURITY WARNING ⚠️
+# This setup mounts the Docker socket which gives Jenkins container access to the Docker daemon.
+# This is suitable for development/testing but has security implications:
+# - The container can start/stop other containers
+# - Effectively provides root-level access to the host
+# 
+# For production environments, consider:
+# - Using the docker-dind service below instead
+# - Using Kaniko for building images without Docker daemon
+# - Using a dedicated build agent with proper isolation
+# - Running Jenkins on Kubernetes with proper RBAC
+
 services:
   jenkins:
     image: jenkins/jenkins:lts-jdk17
     container_name: pern-jenkins
     restart: unless-stopped
+    # Run as jenkins user (UID 1000) with docker group for socket access
+    user: "1000:${DOCKER_GID:-999}"
     ports:
       - "8080:8080"
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
+      # Docker socket mount - see security warning above
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./jobs:/var/jenkins_home/jobs
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
@@ -18,29 +33,33 @@ services:
       - .env
     networks:
       - jenkins-network
-    # Note: Jenkins will run as jenkins user. Docker commands need docker group access.
-    # The setup.sh script handles docker socket permissions.
 
-  # Docker-in-Docker for isolated builds (alternative to mounting docker.sock)
-  docker-dind:
-    image: docker:24-dind
-    container_name: pern-jenkins-docker
-    restart: unless-stopped
-    privileged: true
-    environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    volumes:
-      - jenkins_docker_certs:/certs/client
-      - jenkins_home:/var/jenkins_home
-    networks:
-      - jenkins-network
-    command: --storage-driver=overlay2
+  # Docker-in-Docker service for isolated builds
+  # To use this instead of mounting docker.sock:
+  # 1. Comment out the docker.sock mount above
+  # 2. Uncomment this service
+  # 3. Set DOCKER_HOST=tcp://docker-dind:2376 in Jenkins
+  # 4. Configure TLS certificates in Jenkins
+  # docker-dind:
+  #   image: docker:24-dind
+  #   container_name: pern-jenkins-docker
+  #   restart: unless-stopped
+  #   privileged: true
+  #   environment:
+  #     - DOCKER_TLS_CERTDIR=/certs
+  #   volumes:
+  #     - jenkins_docker_certs:/certs/client
+  #     - jenkins_home:/var/jenkins_home
+  #   networks:
+  #     - jenkins-network
+  #   command: --storage-driver=overlay2
 
 volumes:
   jenkins_home:
     driver: local
-  jenkins_docker_certs:
-    driver: local
+  # Uncomment if using docker-dind service
+  # jenkins_docker_certs:
+  #   driver: local
 
 networks:
   jenkins-network:

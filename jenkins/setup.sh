@@ -92,10 +92,18 @@ start_jenkins() {
     
     echo -e "${BLUE}Using: ${DOCKER_COMPOSE}${NC}"
     
-    # Fix docker socket permissions for Jenkins
-    if [ -S /var/run/docker.sock ]; then
-        sudo chmod 666 /var/run/docker.sock 2>/dev/null || echo -e "${YELLOW}Note: Could not modify docker.sock permissions. You may need to run: sudo chmod 666 /var/run/docker.sock${NC}"
-    fi
+    # Check Docker socket accessibility
+    echo ""
+    echo -e "${YELLOW}⚠️  Security Notice:${NC}"
+    echo "This setup mounts the Docker socket for building images."
+    echo "For production, consider using Docker-in-Docker or Kaniko instead."
+    echo ""
+    
+    # Try to get docker group GID
+    DOCKER_GID=$(getent group docker | cut -d: -f3 2>/dev/null || echo "999")
+    
+    # Export for docker-compose
+    export DOCKER_GID
     
     ${DOCKER_COMPOSE} up -d
     
