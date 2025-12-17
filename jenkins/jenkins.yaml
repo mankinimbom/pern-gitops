@@ -1,0 +1,112 @@
+jenkins:
+  systemMessage: "PERN GitOps Jenkins Server"
+  numExecutors: 2
+  mode: NORMAL
+  scmCheckoutRetryCount: 3
+  
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD:-admin123}"
+          
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  remotingSecurity:
+    enabled: true
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "ghcr-credentials"
+              username: "${GHCR_USERNAME}"
+              password: "${GHCR_TOKEN}"
+              description: "GitHub Container Registry credentials"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "github-credentials"
+              username: "${GITHUB_USERNAME}"
+              password: "${GITHUB_TOKEN}"
+              description: "GitHub repository credentials"
+          - string:
+              scope: GLOBAL
+              id: "argocd-token"
+              secret: "${ARGOCD_TOKEN}"
+              description: "ArgoCD authentication token"
+
+unclassified:
+  location:
+    url: "${JENKINS_URL:-http://localhost:8080/}"
+    adminAddress: "admin@example.com"
+    
+  gitHubPluginConfig:
+    configs:
+      - name: "GitHub"
+        apiUrl: "https://api.github.com"
+        manageHooks: true
+        
+  timestamper:
+    allPipelines: true
+    
+  ansiColorBuildWrapper:
+    colorMapName: "xterm"
+
+jobs:
+  - script: |
+      pipelineJob('pern-gitops-pipeline') {
+        description('PERN GitOps CI/CD Pipeline')
+        
+        parameters {
+          choiceParam('ENVIRONMENT', ['staging', 'production'], 'Target environment for deployment')
+          booleanParam('SKIP_TESTS', false, 'Skip running tests')
+          booleanParam('BUILD_BACKEND', true, 'Build backend image')
+          booleanParam('BUILD_FRONTEND', true, 'Build frontend image')
+        }
+        
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/mankinimbom/pern-gitops.git')
+                  credentials('github-credentials')
+                }
+                branches('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+        
+        triggers {
+          githubPush()
+          pollScm {
+            scmpoll_spec('H/5 * * * *')
+          }
+        }
+        
+        properties {
+          githubProjectUrl('https://github.com/mankinimbom/pern-gitops')
+        }
+      }
+
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+        
+  dockerTool:
+    installations:
+      - name: "docker"
+        properties:
+          - installSource:
+              installers:
+                - fromDocker:
+                    version: "latest"
