@@ -5,8 +5,6 @@ services:
     image: jenkins/jenkins:lts-jdk17
     container_name: pern-jenkins
     restart: unless-stopped
-    privileged: true
-    user: root
     ports:
       - "8080:8080"
       - "50000:50000"
@@ -16,8 +14,12 @@ services:
       - ./jobs:/var/jenkins_home/jobs
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    env_file:
+      - .env
     networks:
       - jenkins-network
+    # Note: Jenkins will run as jenkins user. Docker commands need docker group access.
+    # The setup.sh script handles docker socket permissions.
 
   # Docker-in-Docker for isolated builds (alternative to mounting docker.sock)
   docker-dind:

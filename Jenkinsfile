@@ -235,12 +235,12 @@ pipeline {
                                 echo "No changes to commit"
                             else
                                 git add apps/pern-app/
-                                git commit -m "chore: update ${ENVIRONMENT} images to ${GIT_COMMIT_SHORT}
-                                
-                                - Backend: ${BACKEND_IMAGE}:${GIT_COMMIT_SHORT}
-                                - Frontend: ${FRONTEND_IMAGE}:${GIT_COMMIT_SHORT}
-                                
-                                [skip ci]"
+                                git commit -m "chore: update ${ENVIRONMENT} images to ${GIT_COMMIT_SHORT}" \
+                                           -m "" \
+                                           -m "- Backend: ${BACKEND_IMAGE}:${GIT_COMMIT_SHORT}" \
+                                           -m "- Frontend: ${FRONTEND_IMAGE}:${GIT_COMMIT_SHORT}" \
+                                           -m "" \
+                                           -m "[skip ci]"
                                 
                                 git push https://${GIT_USER}:${GIT_TOKEN}@github.com/${GHCR_NAMESPACE}/pern-gitops.git HEAD:main
                             fi

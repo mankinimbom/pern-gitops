@@ -80,7 +80,24 @@ EOF
 start_jenkins() {
     echo -e "${BLUE}Starting Jenkins...${NC}"
     
-    docker-compose up -d
+    # Detect Docker Compose command (v1 vs v2)
+    if docker compose version &> /dev/null; then
+        DOCKER_COMPOSE="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE="docker-compose"
+    else
+        echo -e "${RED}Error: Docker Compose not found${NC}"
+        exit 1
+    fi
+    
+    echo -e "${BLUE}Using: ${DOCKER_COMPOSE}${NC}"
+    
+    # Fix docker socket permissions for Jenkins
+    if [ -S /var/run/docker.sock ]; then
+        sudo chmod 666 /var/run/docker.sock 2>/dev/null || echo -e "${YELLOW}Note: Could not modify docker.sock permissions. You may need to run: sudo chmod 666 /var/run/docker.sock${NC}"
+    fi
+    
+    ${DOCKER_COMPOSE} up -d
     
     echo -e "${GREEN}✓ Jenkins is starting...${NC}"
     echo ""
@@ -102,7 +119,7 @@ start_jenkins() {
     
     if [ $COUNTER -eq $MAX_ATTEMPTS ]; then
         echo -e "${RED}Warning: Jenkins took longer than expected to start${NC}"
-        echo "Check logs with: docker-compose logs -f jenkins"
+        echo "Check logs with: ${DOCKER_COMPOSE} logs -f jenkins"
     fi
 }
 
@@ -124,10 +141,10 @@ display_info() {
     echo "4. Click 'Build with Parameters' to run your first build"
     echo ""
     echo -e "${YELLOW}Useful Commands:${NC}"
-    echo "  View logs:        docker-compose logs -f jenkins"
-    echo "  Stop Jenkins:     docker-compose down"
-    echo "  Restart Jenkins:  docker-compose restart"
-    echo "  Remove all:       docker-compose down -v"
+    echo "  View logs:        ${DOCKER_COMPOSE} logs -f jenkins"
+    echo "  Stop Jenkins:     ${DOCKER_COMPOSE} down"
+    echo "  Restart Jenkins:  ${DOCKER_COMPOSE} restart"
+    echo "  Remove all:       ${DOCKER_COMPOSE} down -v"
     echo ""
 }
 
